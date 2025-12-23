@@ -162,10 +162,19 @@ def log_prediction(customer_id, transaction_data, prediction, risk_score):
 @app.route('/api/predict', methods=['POST'])
 def predict_fraud():
     """
-    Predict fraud for a single transaction.
+    Unified fraud detection endpoint - Full Pipeline.
+    
+    Flow:
+    1. Preprocess transaction & feature engineering
+    2. ML model prediction
+    3. Rule engine evaluation
+    4. Risk explanation via LLM  
+    5. Store fraud alert if applicable
+    6. Return comprehensive response
     
     Request JSON:
     {
+        "transaction_id": "T12345",
         "customer_id": "C123",
         "kyc_verified": 1,
         "account_age_days": 200,
@@ -176,19 +185,19 @@ def predict_fraud():
     
     Response:
     {
-        "success": true,
-        "prediction": "Fraud" or "Legitimate",
-        "risk_score": 0.87,
-        "threshold": 0.3
+        "transaction_id": "T12345",
+        "prediction": "Fraud",
+        "risk_score": 0.92,
+        "reason": "Human-readable explanation"
     }
     """
-    if not MODEL_LOADED:
-        return jsonify({
-            'success': False,
-            'error': 'Prediction model not available'
-        }), 503
-    
     try:
+        # Import real-time components
+        from src.realtime.realtime_predictor import get_predictor
+        from src.realtime.rule_engine import get_rule_engine
+        from src.realtime.explainer import generate_risk_explanation
+        from src.realtime.alert_manager import get_alert_manager
+        
         # Get request data
         data = request.get_json()
         
@@ -208,24 +217,110 @@ def predict_fraud():
                 'error': f'Missing required fields: {", ".join(missing_fields)}'
             }), 400
         
-        # Preprocess transaction
-        features = preprocess_transaction(data)
+        # Add transaction ID if not provided
+        transaction_id = data.get('transaction_id', f"T_{data['customer_id']}_{int(datetime.now().timestamp())}")
+        data['transaction_id'] = transaction_id
         
-        # Predict
-        risk_score = float(model.predict_proba(features)[0, 1])
-        prediction = "Fraud" if risk_score >= FRAUD_THRESHOLD else "Legitimate"
+        # STEP 1 & 2: ML Model Prediction
+        predictor = get_predictor()
+        ml_prediction = predictor.predict(data)
         
-        # Log prediction
-        log_prediction(data['customer_id'], data, prediction, risk_score)
+        # STEP 3: Rule Engine Evaluation
+        rule_engine = get_rule_engine()
+        rule_evaluation = rule_engine.evaluate_transaction(data, ml_prediction)
         
-        # Return response
+        # Extract final decision
+        final_prediction = rule_evaluation['final_prediction']
+        final_risk_score = rule_evaluation['risk_score']
+        triggered_rules = rule_evaluation['rules_triggered']
+        
+        # STEP 4: Generate Human-Readable Explanation
+        try:
+            explanation_payload = {
+                'transaction_data': data,
+                'risk_score': final_risk_score,
+                'prediction': final_prediction,
+                'triggered_rules': triggered_rules,
+                'ml_risk_score': ml_prediction.get('risk_score', 0),
+                'rule_risk_score': rule_evaluation.get('rule_risk_score', 0)
+            }
+            reason = generate_risk_explanation(explanation_payload)
+        except Exception as e:
+            # Fallback reason if explainer fails
+            reason = f"Transaction flagged as {final_prediction.lower()} with risk score {final_risk_score:.1%}"
+            print(f"Explanation generation failed: {e}")
+        
+        # STEP 5: Store Fraud Alert (only if fraud detected)
+        alert_id = None
+        if final_prediction == 'Fraud':
+            try:
+                alert_manager = get_alert_manager()
+                alert_id = alert_manager.create_alert(
+                    transaction_id=transaction_id,
+                    customer_id=data['customer_id'],
+                    risk_score=final_risk_score,
+                    ml_prediction=ml_prediction,
+                    rule_evaluation=rule_evaluation,
+                    metadata={'timestamp': datetime.now().isoformat()}
+                )
+            except Exception as e:
+                print(f"Alert creation failed: {e}")
+        
+        # STEP 6: Return Final Response
+        response = {
+            'success': True,
+            'transaction_id': transaction_id,
+            'prediction': final_prediction,
+            'risk_score': round(final_risk_score, 4),
+            'reason': reason,
+            'details': {
+                'ml_risk_score': round(ml_prediction.get('risk_score', 0), 4),
+                'rule_risk_score': round(rule_evaluation.get('rule_risk_score', 0), 4),
+                'triggered_rules': triggered_rules,
+                'rules_count': len(triggered_rules),
+                'alert_id': alert_id
+            }
+        }
+        
+        return jsonify(response)
+    
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e),
+            'transaction_id': data.get('transaction_id') if data else None
+        }), 500
+
+
+
+@app.route('/api/alerts', methods=['GET'])
+def get_alerts():
+    """
+    Get fraud alerts from database.
+    
+    Query params:
+        - limit: number of alerts to return (default: 50, max: 500)
+        - severity: filter by severity (LOW, MEDIUM, HIGH, CRITICAL)
+        - status: filter by status (NEW, INVESTIGATING, RESOLVED, etc.)
+    """
+    try:
+        from src.realtime.alert_manager import get_alert_manager
+        
+        limit = min(int(request.args.get('limit', 50)), 500)
+        severity = request.args.get('severity')
+        status = request.args.get('status')
+        
+        alert_manager = get_alert_manager()
+        alerts = alert_manager.get_alerts(
+            severity=severity,
+            status=status,
+            limit=limit
+        )
+        
         return jsonify({
             'success': True,
-            'prediction': prediction,
-            'risk_score': round(risk_score, 4),
-            'threshold': FRAUD_THRESHOLD,
-            'customer_id': data['customer_id'],
-            'confidence': round(risk_score if prediction == "Fraud" else (1 - risk_score), 4)
+            'alerts': alerts,
+            'count': len(alerts)
         })
     
     except Exception as e:
