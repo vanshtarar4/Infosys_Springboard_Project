@@ -1,0 +1,7 @@
+{
+  "selected_threshold": 0.3,
+  "model_name": "Logistic Regression",
+  "recall": 0.93,
+  "precision": 0.22,
+  "f1_score": 0.36
+}

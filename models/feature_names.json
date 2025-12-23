@@ -1,0 +1,27 @@
+{
+  "numeric_features": [
+    "kyc_verified",
+    "account_age_days",
+    "transaction_amount",
+    "amount_log",
+    "hour",
+    "weekday",
+    "is_high_value"
+  ],
+  "categorical_features": [
+    "channel"
+  ],
+  "all_features": [
+    "kyc_verified",
+    "account_age_days",
+    "transaction_amount",
+    "amount_log",
+    "hour",
+    "weekday",
+    "is_high_value",
+    "channel_ATM",
+    "channel_Mobile",
+    "channel_POS",
+    "channel_Web"
+  ]
+}

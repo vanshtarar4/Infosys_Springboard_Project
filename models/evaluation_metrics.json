@@ -1,0 +1,8 @@
+{
+  "roc_auc": 0.7593761131749021,
+  "train_samples": 4000,
+  "test_samples": 1000,
+  "n_features": 11,
+  "train_fraud_rate": 0.0865,
+  "test_fraud_rate": 0.086
+}

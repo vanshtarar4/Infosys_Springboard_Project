@@ -1,0 +1,24 @@
+{
+  "source_file": "data/processed/transactions_processed.csv",
+  "total_samples": 5000,
+  "train_samples": 4000,
+  "test_samples": 1000,
+  "test_size": 0.2,
+  "random_state": 42,
+  "original_distribution": {
+    "legitimate_pct": 91.36,
+    "fraudulent_pct": 8.64
+  },
+  "train_distribution": {
+    "legitimate_pct": 91.35,
+    "fraudulent_pct": 8.649999999999999,
+    "fraud_count": 346,
+    "legit_count": 3654
+  },
+  "test_distribution": {
+    "legitimate_pct": 91.4,
+    "fraudulent_pct": 8.6,
+    "fraud_count": 86,
+    "legit_count": 914
+  }
+}

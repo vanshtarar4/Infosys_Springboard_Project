@@ -1,0 +1,10 @@
+{
+  "fraud_rate": 8.64,
+  "legit_mean": 34769.60923817864,
+  "fraud_mean": 87011.64351851853,
+  "ratio": 2.502520028984845,
+  "top_risk_channel": "Mobile",
+  "top_risk_channel_rate": 9.588353413654618,
+  "top_risk_segment": "new",
+  "top_risk_segment_rate": 9.025559105431311
+}

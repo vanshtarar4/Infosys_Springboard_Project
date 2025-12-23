@@ -1,0 +1,118 @@
+{
+  "total_rows": 5000,
+  "total_columns": 16,
+  "schema": [
+    {
+      "column_name": "transaction_id",
+      "dtype": "object",
+      "null_count": 0,
+      "null_percentage": 0.0,
+      "sample_value": "TXN_200000"
+    },
+    {
+      "column_name": "customer_id",
+      "dtype": "object",
+      "null_count": 0,
+      "null_percentage": 0.0,
+      "sample_value": "CUST_799"
+    },
+    {
+      "column_name": "kyc_verified",
+      "dtype": "int64",
+      "null_count": 0,
+      "null_percentage": 0.0,
+      "sample_value": "1"
+    },
+    {
+      "column_name": "account_age_days",
+      "dtype": "int64",
+      "null_count": 0,
+      "null_percentage": 0.0,
+      "sample_value": "1050"
+    },
+    {
+      "column_name": "transaction_amount",
+      "dtype": "int64",
+      "null_count": 0,
+      "null_percentage": 0.0,
+      "sample_value": "256369"
+    },
+    {
+      "column_name": "channel",
+      "dtype": "object",
+      "null_count": 0,
+      "null_percentage": 0.0,
+      "sample_value": "Mobile"
+    },
+    {
+      "column_name": "timestamp",
+      "dtype": "datetime64[ns]",
+      "null_count": 0,
+      "null_percentage": 0.0,
+      "sample_value": "2025-08-12 02:10:24"
+    },
+    {
+      "column_name": "is_fraud",
+      "dtype": "int64",
+      "null_count": 0,
+      "null_percentage": 0.0,
+      "sample_value": "0"
+    },
+    {
+      "column_name": "timestamp_utc",
+      "dtype": "datetime64[ns, UTC]",
+      "null_count": 0,
+      "null_percentage": 0.0,
+      "sample_value": "2025-08-12 02:10:24+00:00"
+    },
+    {
+      "column_name": "hour",
+      "dtype": "int32",
+      "null_count": 0,
+      "null_percentage": 0.0,
+      "sample_value": "2"
+    },
+    {
+      "column_name": "minute",
+      "dtype": "int32",
+      "null_count": 0,
+      "null_percentage": 0.0,
+      "sample_value": "10"
+    },
+    {
+      "column_name": "weekday",
+      "dtype": "int32",
+      "null_count": 0,
+      "null_percentage": 0.0,
+      "sample_value": "1"
+    },
+    {
+      "column_name": "month",
+      "dtype": "int32",
+      "null_count": 0,
+      "null_percentage": 0.0,
+      "sample_value": "8"
+    },
+    {
+      "column_name": "is_high_value",
+      "dtype": "int64",
+      "null_count": 0,
+      "null_percentage": 0.0,
+      "sample_value": "1"
+    },
+    {
+      "column_name": "amount_log",
+      "dtype": "float64",
+      "null_count": 0,
+      "null_percentage": 0.0,
+      "sample_value": "12.454376992502883"
+    },
+    {
+      "column_name": "account_age_bucket",
+      "dtype": "object",
+      "null_count": 0,
+      "null_percentage": 0.0,
+      "sample_value": "recent"
+    }
+  ]
+}

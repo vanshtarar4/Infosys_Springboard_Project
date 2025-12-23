@@ -1,0 +1,23 @@
+{
+  "accuracy": 0.47,
+  "precision": 0.12876254180602006,
+  "recall": 0.8953488372093024,
+  "f1_score": 0.22514619883040934,
+  "roc_auc": 0.7881405526436314,
+  "confusion_matrix": {
+    "true_negatives": 393,
+    "false_positives": 521,
+    "false_negatives": 9,
+    "true_positives": 77
+  },
+  "fraud_detection": {
+    "total_fraud_cases": 86,
+    "frauds_detected": 77,
+    "frauds_missed": 9,
+    "detection_rate": 0.8953488372093024,
+    "false_alarm_rate": 0.5700218818380745
+  },
+  "model_name": "Logistic Regression",
+  "threshold": 0.3,
+  "test_samples": 1000
+}
