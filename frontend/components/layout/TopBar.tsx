@@ -10,7 +10,7 @@ export default function TopBar() {
     const { theme, toggleTheme } = useTheme()
     const [showNotifications, setShowNotifications] = useState(false)
     const [showUserMenu, setShowUserMenu] = useState(false)
-    const [notificationCount, setNotificationCount] = useState(3)
+    const [notificationCount, setNotificationCount] = useState(0)
 
     const notificationRef = useRef<HTMLDivElement>(null)
     const userMenuRef = useRef<HTMLDivElement>(null)
@@ -122,30 +122,16 @@ export default function TopBar() {
                                     <div className="max-h-96 overflow-y-auto" style={{
                                         backgroundColor: theme === 'dark' ? 'hsl(222, 47%, 15%)' : 'hsl(210, 40%, 98%)'
                                     }}>
-                                        {[1, 2, 3].map((i) => (
-                                            <motion.div
-                                                key={i}
-                                                initial={{ opacity: 0, x: -10 }}
-                                                animate={{ opacity: 1, x: 0 }}
-                                                transition={{ delay: i * 0.05 }}
-                                                className="p-4 hover:bg-card-hover transition-colors cursor-pointer border-b border-border last:border-0"
-                                            >
-                                                <div className="flex items-start gap-3">
-                                                    <div className="w-2 h-2 rounded-full bg-danger mt-2" />
-                                                    <div className="flex-1">
-                                                        <p className="text-sm font-medium text-foreground">
-                                                            Critical fraud alert detected
-                                                        </p>
-                                                        <p className="text-xs text-muted-foreground mt-1">
-                                                            Transaction C{i}2345 flagged with 94% risk score
-                                                        </p>
-                                                        <p className="text-xs text-muted-foreground mt-1">
-                                                            {i * 5}m ago
-                                                        </p>
-                                                    </div>
-                                                </div>
-                                            </motion.div>
-                                        ))}
+                                        {notificationCount === 0 ? (
+                                            <div className="p-8 text-center">
+                                                <p className="text-sm text-muted-foreground">No new notifications</p>
+                                            </div>
+                                        ) : (
+                                            // Placeholder for future real notifications
+                                            <div className="p-4">
+                                                <p className="text-sm text-muted-foreground">Notifications will appear here</p>
+                                            </div>
+                                        )}
                                     </div>
                                 </motion.div>
                             )}
