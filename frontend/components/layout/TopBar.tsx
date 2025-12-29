@@ -79,11 +79,11 @@ export default function TopBar() {
                             className="relative w-10 h-10 rounded-lg bg-card hover:bg-card-hover border border-border flex items-center justify-center transition-colors"
                         >
                             <Bell className="w-5 h-5 text-muted-foreground" />
-                            {notificationCount > 0 && !showNotifications && (
+                            {notificationCount > 0 && (
                                 <motion.span
                                     initial={{ scale: 0 }}
                                     animate={{ scale: 1 }}
-                                    className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-gradient-to-br from-red-500 to-red-600 text-white text-xs font-bold flex items-center justify-center shadow-lg ring-2 ring-background"
+                                    className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center"
                                 >
                                     {notificationCount}
                                 </motion.span>
@@ -98,7 +98,7 @@ export default function TopBar() {
                                     animate="open"
                                     exit="closed"
                                     variants={dropdownVariants}
-                                    className="absolute right-0 mt-2 w-80 bg-card/95 backdrop-blur-xl border border-border rounded-lg shadow-2xl overflow-hidden"
+                                    className="absolute right-0 mt-2 w-80 bg-card/95 backdrop-blur-xl border border-border rounded-lg shadow-2xl overflow-hidden z-50"
                                 >
                                     <div className="p-4 border-b border-border">
                                         <h3 className="font-semibold text-foreground">Notifications</h3>
@@ -198,7 +198,7 @@ export default function TopBar() {
                                     animate="open"
                                     exit="closed"
                                     variants={dropdownVariants}
-                                    className="absolute right-0 mt-2 w-56 glass border border-border rounded-lg shadow-xl overflow-hidden"
+                                    className="absolute right-0 mt-2 w-56 glass border border-border rounded-lg shadow-xl overflow-hidden z-50"
                                 >
                                     <div className="p-3 border-b border-border">
                                         <p className="text-sm font-medium text-foreground">Admin User</p>
