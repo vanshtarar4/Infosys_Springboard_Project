@@ -9,13 +9,13 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-# Try to import Gemini
+# Try to import new Gemini package
 try:
-    import google.generativeai as genai
+    from google import genai
     GENAI_AVAILABLE = True
 except ImportError:
     GENAI_AVAILABLE = False
-    logger.warning("google-generativeai not installed. Using fallback explanations.")
+    logger.warning("google-genai not installed. Using fallback explanations.")
 
 
 class FraudExplainer:
@@ -31,16 +31,16 @@ class FraudExplainer:
             api_key: Gemini API key (optional, will use env var if not provided)
         """
         self.api_key = api_key or os.getenv('GEMINI_API_KEY', 'AIzaSyAS4c8jLmX61OrlyUXMEiGUcqC3onpICJ0')
-        self.model = None
+        self.client = None
         
         if GENAI_AVAILABLE and self.api_key:
             try:
-                genai.configure(api_key=self.api_key)
-                self.model = genai.GenerativeModel('gemini-2.0-flash-exp')
-                logger.info("✓ Gemini model initialized for fraud explanations")
+                # New API: Use Client object
+                self.client = genai.Client(api_key=self.api_key)
+                logger.info("✓ Gemini client initialized for fraud explanations (new API)")
             except Exception as e:
-                logger.error(f"Failed to initialize Gemini: {e}")
-                self.model = None
+                logger.error(f"Failed to initialize Gemini client: {e}")
+                self.client = None
     
     def generate_risk_explanation(self, payload: Dict[str, Any]) -> str:
         """
@@ -59,7 +59,7 @@ class FraudExplainer:
             Human-readable explanation string
         """
         # Try LLM-based explanation first
-        if self.model:
+        if self.client:
             try:
                 explanation = self._generate_llm_explanation(payload)
                 if explanation:
@@ -108,9 +108,11 @@ Task: Generate a clear, concise explanation (2-3 sentences) for why this transac
 Explanation:"""
 
         try:
-            response = self.model.generate_content(
-                prompt,
-                generation_config={
+            # New API: Use client.models.generate_content()
+            response = self.client.models.generate_content(
+                model='gemini-2.0-flash-exp',
+                contents=prompt,
+                config={
                     'temperature': 0.3,
                     'top_p': 0.8,
                     'max_output_tokens': 200,

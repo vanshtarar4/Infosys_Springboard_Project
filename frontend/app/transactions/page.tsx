@@ -1,249 +1,295 @@
-'use client';
+'use client'
 
-import { useState, useEffect } from 'react';
-import Link from 'next/link';
+import { useState, useEffect } from 'react'
+import { motion } from 'framer-motion'
+import Link from 'next/link'
+import {
+    CreditCard,
+    ArrowLeft,
+    Search,
+    DollarSign,
+    User,
+    CheckCircle,
+    XCircle,
+} from 'lucide-react'
+import DataTable from '@/components/ui/DataTable'
+import StatusBadge from '@/components/ui/StatusBadge'
+import { formatCurrency, formatRelativeTime } from '@/utils/helpers'
 
 interface Transaction {
-    transaction_id: string;
-    customer_id: string;
-    kyc_verified: number;
-    account_age_days: number;
-    transaction_amount: number;
-    channel: string;
-    timestamp: string;
-    is_fraud: number;
-    is_high_value: number;
-    account_age_bucket: string;
+    transaction_id: string
+    customer_id: string
+    kyc_verified: number
+    account_age_days: number
+    transaction_amount: number
+    channel: string
+    timestamp: string
+    is_fraud: number
+    is_high_value: number
+    account_age_bucket: string
 }
 
 interface PaginationInfo {
-    limit: number;
-    offset: number;
-    total: number;
-    returned: number;
+    limit: number
+    offset: number
+    total: number
+    returned: number
 }
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8001';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8001'
 
 export default function TransactionsPage() {
-    const [transactions, setTransactions] = useState<Transaction[]>([]);
-    const [pagination, setPagination] = useState<PaginationInfo | null>(null);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
-    const [currentPage, setCurrentPage] = useState(1);
-    const limit = 50;
+    const [transactions, setTransactions] = useState<Transaction[]>([])
+    const [pagination, setPagination] = useState<PaginationInfo | null>(null)
+    const [loading, setLoading] = useState(true)
+    const [error, setError] = useState<string | null>(null)
+    const [currentPage, setCurrentPage] = useState(1)
+    const [searchTerm, setSearchTerm] = useState('')
+    const limit = 25 // Reduced from 50 for better performance
 
     useEffect(() => {
-        fetchTransactions();
-    }, [currentPage]);
+        fetchTransactions()
+    }, [currentPage])
 
     const fetchTransactions = async () => {
         try {
-            setLoading(true);
-            const offset = (currentPage - 1) * limit;
-            const response = await fetch(`${API_BASE_URL}/api/transactions?limit=${limit}&offset=${offset}`);
-            const data = await response.json();
+            setLoading(true)
+            const offset = (currentPage - 1) * limit
+            const response = await fetch(`${API_BASE_URL}/api/transactions?limit=${limit}&offset=${offset}`)
+            const data = await response.json()
 
             if (data.success) {
-                setTransactions(data.data);
-                setPagination(data.pagination);
-                setError(null);
+                setTransactions(data.data)
+                setPagination(data.pagination)
+                setError(null)
             } else {
-                setError('Failed to load transactions');
+                setError('Failed to load transactions')
             }
         } catch (err) {
-            setError('Error connecting to API');
-            console.error(err);
+            setError('Error connecting to API')
+            console.error(err)
         } finally {
-            setLoading(false);
+            setLoading(false)
         }
-    };
+    }
 
-    const totalPages = pagination ? Math.ceil(pagination.total / limit) : 0;
+    const totalPages = pagination ? Math.ceil(pagination.total / limit) : 0
 
-    return (
-        <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-            {/* Header */}
-            <header className="bg-white shadow-sm border-b border-gray-200">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-                    <div className="flex justify-between items-center">
-                        <div>
-                            <h1 className="text-3xl font-bold text-gray-900">Transaction History</h1>
-                            <p className="text-sm text-gray-500 mt-1">View and analyze all transactions</p>
-                        </div>
-                        <nav className="flex gap-4">
-                            <Link href="/" className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg font-medium">
-                                Dashboard
-                            </Link>
-                            <Link href="/transactions" className="px-4 py-2 bg-blue-600 text-white rounded-lg font-medium">
-                                Transactions
-                            </Link>
-                            <Link href="/analytics" className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg font-medium">
-                                Analytics
-                            </Link>
-                            <Link href="/upload" className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg font-medium">
-                                Upload
-                            </Link>
-                        </nav>
-                    </div>
+    // Filter transactions based on search
+    const filteredTransactions = transactions.filter(txn =>
+        txn.transaction_id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        txn.customer_id.toLowerCase().includes(searchTerm.toLowerCase())
+    )
+
+    const columns = [
+        {
+            key: 'transaction_id',
+            label: 'Transaction',
+            sortable: true,
+            render: (txn: Transaction) => (
+                <div>
+                    <div className="text-sm font-medium text-foreground">{txn.transaction_id}</div>
+                    <div className="text-xs text-muted-foreground">{formatRelativeTime(txn.timestamp)}</div>
                 </div>
-            </header>
-
-            {/* Main Content */}
-            <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                {loading ? (
-                    <div className="bg-white rounded-xl shadow-md p-12 text-center">
-                        <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-blue-600 border-r-transparent"></div>
-                        <p className="mt-4 text-gray-600">Loading transactions...</p>
-                    </div>
-                ) : error ? (
-                    <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-center">
-                        <p className="text-red-600">{error}</p>
-                        <button
-                            onClick={fetchTransactions}
-                            className="mt-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
-                        >
-                            Retry
-                        </button>
+            )
+        },
+        {
+            key: 'customer_id',
+            label: 'Customer',
+            sortable: true,
+            render: (txn: Transaction) => (
+                <div className="flex items-center gap-2">
+                    <User className="w-4 h-4 text-muted-foreground" />
+                    <span className="text-sm text-foreground">{txn.customer_id}</span>
+                </div>
+            )
+        },
+        {
+            key: 'transaction_amount',
+            label: 'Amount',
+            sortable: true,
+            render: (txn: Transaction) => (
+                <div className={`text-sm font-semibold ${txn.is_high_value ? 'text-warning' : 'text-foreground'}`}>
+                    {formatCurrency(txn.transaction_amount)}
+                    {txn.is_high_value === 1 && (
+                        <span className="ml-2 text-xs text-warning">HIGH VALUE</span>
+                    )}
+                </div>
+            )
+        },
+        {
+            key: 'channel',
+            label: 'Channel',
+            sortable: true,
+            render: (txn: Transaction) => (
+                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-secondary/10 text-secondary border border-secondary/20">
+                    {txn.channel}
+                </span>
+            )
+        },
+        {
+            key: 'kyc_verified',
+            label: 'KYC',
+            sortable: true,
+            render: (txn: Transaction) =>
+                txn.kyc_verified === 1 ? (
+                    <div className="flex items-center gap-1.5 text-success text-sm">
+                        <CheckCircle className="w-4 h-4" />
+                        <span>Verified</span>
                     </div>
                 ) : (
-                    <>
-                        {/* Stats Bar */}
-                        {pagination && (
-                            <div className="bg-white rounded-xl shadow-md p-4 mb-6 flex justify-between items-center">
-                                <div className="text-sm text-gray-600">
-                                    Showing <span className="font-semibold text-gray-900">{pagination.offset + 1}</span> to{' '}
-                                    <span className="font-semibold text-gray-900">{Math.min(pagination.offset + pagination.returned, pagination.total)}</span> of{' '}
-                                    <span className="font-semibold text-gray-900">{pagination.total}</span> transactions
-                                </div>
-                                <div className="text-sm text-gray-600">
-                                    Page <span className="font-semibold text-gray-900">{currentPage}</span> of{' '}
-                                    <span className="font-semibold text-gray-900">{totalPages}</span>
-                                </div>
-                            </div>
-                        )}
+                    <div className="flex items-center gap-1.5 text-warning text-sm">
+                        <XCircle className="w-4 h-4" />
+                        <span>Pending</span>
+                    </div>
+                )
+        },
+        {
+            key: 'account_age_bucket',
+            label: 'Account Age',
+            sortable: true,
+            render: (txn: Transaction) => (
+                <span className="text-sm text-muted-foreground capitalize">
+                    {txn.account_age_bucket}
+                </span>
+            )
+        },
+        {
+            key: 'is_fraud',
+            label: 'Status',
+            sortable: true,
+            render: (txn: Transaction) => (
+                <StatusBadge
+                    status={txn.is_fraud === 1 ? 'FRAUD' : 'LEGITIMATE'}
+                    severity={txn.is_fraud === 1 ? 'CRITICAL' : 'LOW'}
+                    animate={txn.is_fraud === 1}
+                    size="sm"
+                />
+            )
+        },
+    ]
 
-                        {/* Table */}
-                        <div className="bg-white rounded-xl shadow-md overflow-hidden">
-                            <div className="overflow-x-auto">
-                                <table className="min-w-full divide-y divide-gray-200">
-                                    <thead className="bg-gray-50">
-                                        <tr>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                Transaction ID
-                                            </th>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                Customer
-                                            </th>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                Amount
-                                            </th>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                Channel
-                                            </th>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                KYC
-                                            </th>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                Account Age
-                                            </th>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                Status
-                                            </th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="bg-white divide-y divide-gray-200">
-                                        {transactions.map((txn) => (
-                                            <tr key={txn.transaction_id} className="hover:bg-gray-50">
-                                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                                                    {txn.transaction_id}
-                                                </td>
-                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
-                                                    {txn.customer_id}
-                                                </td>
-                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                    <span className={txn.is_high_value === 1 ? 'font-bold text-orange-600' : ''}>
-                                                        ${txn.transaction_amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                                                    </span>
-                                                </td>
-                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
-                                                    <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium">
-                                                        {txn.channel}
-                                                    </span>
-                                                </td>
-                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
-                                                    {txn.kyc_verified === 1 ? (
-                                                        <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium">
-                                                            ✓ Verified
-                                                        </span>
-                                                    ) : (
-                                                        <span className="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs font-medium">
-                                                            Not Verified
-                                                        </span>
-                                                    )}
-                                                </td>
-                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 capitalize">
-                                                    {txn.account_age_bucket}
-                                                </td>
-                                                <td className="px-6 py-4 whitespace-nowrap text-sm">
-                                                    {txn.is_fraud === 1 ? (
-                                                        <span className="px-3 py-1 bg-red-100 text-red-800 rounded-full text-xs font-bold">
-                                                            ⚠ FRAUD
-                                                        </span>
-                                                    ) : (
-                                                        <span className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium">
-                                                            ✓ Legitimate
-                                                        </span>
-                                                    )}
-                                                </td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
+    return (
+        <div className="space-y-6">
+            {/* Header */}
+            <motion.div
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+            >
+
+                <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
+                            <CreditCard className="w-6 h-6 text-primary" />
+                        </div>
+                        <div>
+                            <h1 className="text-3xl font-bold text-foreground">
+                                Transaction History
+                            </h1>
+                            <p className="text-muted-foreground">
+                                View and analyze all transactions
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </motion.div>
+
+            {/* Stats & Search */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Stats */}
+                {pagination && (
+                    <motion.div
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.1 }}
+                        className="glass rounded-xl border border-border p-4"
+                    >
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <p className="text-sm text-muted-foreground">Total Transactions</p>
+                                <p className="text-2xl font-bold text-foreground">{pagination.total.toLocaleString()}</p>
+                            </div>
+                            <div className="text-right">
+                                <p className="text-sm text-muted-foreground">Showing</p>
+                                <p className="text-sm font-medium text-foreground">
+                                    {pagination.offset + 1} - {Math.min(pagination.offset + pagination.returned, pagination.total)}
+                                </p>
                             </div>
                         </div>
-
-                        {/* Pagination */}
-                        {pagination && totalPages > 1 && (
-                            <div className="mt-6 flex justify-center gap-2">
-                                <button
-                                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                                    disabled={currentPage === 1}
-                                    className="px-4 py-2 bg-white border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed font-medium"
-                                >
-                                    Previous
-                                </button>
-
-                                <div className="flex gap-1">
-                                    {[...Array(Math.min(5, totalPages))].map((_, i) => {
-                                        const pageNum = i + 1;
-                                        return (
-                                            <button
-                                                key={pageNum}
-                                                onClick={() => setCurrentPage(pageNum)}
-                                                className={`px-4 py-2 rounded-lg font-medium ${currentPage === pageNum
-                                                        ? 'bg-blue-600 text-white'
-                                                        : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
-                                                    }`}
-                                            >
-                                                {pageNum}
-                                            </button>
-                                        );
-                                    })}
-                                </div>
-
-                                <button
-                                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                                    disabled={currentPage === totalPages}
-                                    className="px-4 py-2 bg-white border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed font-medium"
-                                >
-                                    Next
-                                </button>
-                            </div>
-                        )}
-                    </>
+                    </motion.div>
                 )}
-            </main>
+
+                {/* Search */}
+                <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.2 }}
+                    className="glass rounded-xl border border-border p-4"
+                >
+                    <div className="relative">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                        <input
+                            type="text"
+                            placeholder="Search by Transaction ID or Customer..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="w-full pl-10 pr-4 py-2 bg-background border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none text-foreground placeholder:text-muted-foreground"
+                        />
+                    </div>
+                </motion.div>
+            </div>
+
+            {/* Table */}
+            <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 }}
+            >
+                <DataTable
+                    data={filteredTransactions}
+                    columns={columns}
+                    keyExtractor={(txn) => txn.transaction_id}
+                    loading={loading}
+                    emptyMessage={searchTerm ? 'No transactions match your search' : 'No transactions found'}
+                />
+            </motion.div>
+
+            {/* Pagination */}
+            {pagination && totalPages > 1 && !searchTerm && (
+                <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.4 }}
+                    className="flex justify-center gap-2"
+                >
+                    <motion.button
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                        disabled={currentPage === 1}
+                        className="px-4 py-2 glass border border-border rounded-lg text-foreground hover:bg-card-hover disabled:opacity-50 disabled:cursor-not-allowed font-medium transition-colors"
+                    >
+                        Previous
+                    </motion.button>
+
+                    <div className="flex items-center gap-2 px-4 py-2 glass border border-border rounded-lg">
+                        <span className="text-sm text-muted-foreground">Page</span>
+                        <span className="text-sm font-semibold text-foreground">{currentPage}</span>
+                        <span className="text-sm text-muted-foreground">of</span>
+                        <span className="text-sm font-semibold text-foreground">{totalPages}</span>
+                    </div>
+
+                    <motion.button
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                        disabled={currentPage === totalPages}
+                        className="px-4 py-2 glass border border-border rounded-lg text-foreground hover:bg-card-hover disabled:opacity-50 disabled:cursor-not-allowed font-medium transition-colors"
+                    >
+                        Next
+                    </motion.button>
+                </motion.div>
+            )}
         </div>
-    );
+    )
 }

@@ -12,14 +12,14 @@
   },
   {
     "model_name": "Random Forest",
-    "precision": 0.23529411764705882,
-    "recall": 0.4186046511627907,
-    "f1_score": 0.301255230125523,
-    "roc_auc": 0.7593761131749021,
-    "true_positives": 36,
-    "false_positives": 117,
-    "true_negatives": 797,
-    "false_negatives": 50
+    "precision": 0.21839080459770116,
+    "recall": 0.4418604651162791,
+    "f1_score": 0.2923076923076923,
+    "roc_auc": 0.7734339219378147,
+    "true_positives": 38,
+    "false_positives": 136,
+    "true_negatives": 778,
+    "false_negatives": 48
   },
   {
     "model_name": "Gradient Boosting",

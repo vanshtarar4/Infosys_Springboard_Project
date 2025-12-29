@@ -5,6 +5,7 @@ Provides RESTful endpoints for transaction data access, metrics, and fraud predi
 
 from flask import Flask, jsonify, request, send_file
 from flask_cors import CORS
+from flask.json.provider import DefaultJSONProvider
 import pandas as pd
 import numpy as np
 import joblib
@@ -14,15 +15,35 @@ from pathlib import Path
 from datetime import datetime
 import sqlite3
 
+# Custom JSON provider to handle NaN values
+class CustomJSONProvider(DefaultJSONProvider):
+    def default(self, obj):
+        # Convert numpy/pandas types to Python types
+        if isinstance(obj, np.integer):
+            return int(obj)
+        elif isinstance(obj, np.floating):
+            # Convert NaN/Inf to None (null in JSON)
+            if np.isnan(obj) or np.isinf(obj):
+                return None
+            return float(obj)
+        elif isinstance(obj, np.ndarray):
+            return obj.tolist()
+        return super().default(obj)
+
 # Add parent directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 from src.utils.db_connection import TransactionDB
+from src.api.feedback_routes import feedback_bp
 
 app = Flask(__name__)
+app.json = CustomJSONProvider(app)
 
 # Enable CORS for development (wide-open)
 CORS(app, resources={r"/api/*": {"origins": "*"}})
+
+# Register feedback routes blueprint
+app.register_blueprint(feedback_bp)
 
 # Configuration
 DB_PATH = 'data/transactions.db'
@@ -217,6 +238,67 @@ def predict_fraud():
                 'error': f'Missing required fields: {", ".join(missing_fields)}'
             }), 400
         
+        # Validate field types and ranges
+        # Validate customer_id
+        customer_id = data.get('customer_id')
+        if not isinstance(customer_id, str) or len(customer_id) == 0 or len(customer_id) > 100:
+            return jsonify({
+                'success': False,
+                'error': 'Invalid customer_id format. Must be non-empty string with max 100 characters.'
+            }), 400
+        
+        # Validate transaction_amount
+        try:
+            amount = float(data['transaction_amount'])
+            if amount < 0:
+                return jsonify({
+                    'success': False,
+                    'error': 'Transaction amount must be positive'
+                }), 400
+            if amount > 10000000:  # $10M limit
+                return jsonify({
+                    'success': False,
+                    'error': 'Transaction amount exceeds maximum allowed ($10,000,000)'
+                }), 400
+        except (ValueError, TypeError):
+            return jsonify({
+                'success': False,
+                'error': 'Invalid transaction amount format. Must be a number.'
+            }), 400
+        
+        # Validate optional fields if provided
+        if 'kyc_verified' in data:
+            if data['kyc_verified'] not in [0, 1, True, False]:
+                return jsonify({
+                    'success': False,
+                    'error': 'kyc_verified must be 0/1 or true/false'
+                }), 400
+        
+        if 'account_age_days' in data:
+            try:
+                age_days = float(data['account_age_days'])
+                if age_days < 0 or age_days > 36500:  # 100 years max
+                    return jsonify({
+                        'success': False,
+                        'error': 'account_age_days must be between 0 and 36500'
+                    }), 400
+            except (ValueError, TypeError):
+                return jsonify({
+                    'success': False,
+                    'error': 'Invalid account_age_days format. Must be a number.'
+                }), 400
+        
+        if 'channel' in data:
+            valid_channels = ['ATM', 'Mobile', 'Web', 'POS', 'International', 'Other']
+            if data['channel'] not in valid_channels:
+                # Try case-insensitive match
+                channel_lower = data['channel'].lower() if isinstance(data['channel'], str) else ''
+                if not any(channel_lower == vc.lower() for vc in valid_channels):
+                    return jsonify({
+                        'success': False,
+                        'error': f'channel must be one of: {", ".join(valid_channels)}'
+                    }), 400
+        
         # Add transaction ID if not provided
         transaction_id = data.get('transaction_id', f"T_{data['customer_id']}_{int(datetime.now().timestamp())}")
         data['transaction_id'] = transaction_id
@@ -266,7 +348,56 @@ def predict_fraud():
             except Exception as e:
                 print(f"Alert creation failed: {e}")
         
-        # STEP 6: Return Final Response
+        # STEP 6: Store Transaction in Database (for feedback system)
+        print(f"\n[DEBUG] Attempting to store transaction: {transaction_id}")
+        print(f"[DEBUG] Customer ID: {data['customer_id']}")
+        print(f"[DEBUG] DB Path: {DB_PATH}")
+        
+        try:
+            conn = sqlite3.connect(DB_PATH)
+            cursor = conn.cursor()
+            
+            print("[DEBUG] Database connection established")
+            
+            # Store transaction with prediction
+            # Note: Using 'timestamp' column name (not 'transaction_timestamp')
+            cursor.execute('''
+                INSERT INTO transactions (
+                    transaction_id,
+                    customer_id,
+                    transaction_amount,
+                    timestamp,
+                    channel,
+                    kyc_verified,
+                    account_age_days,
+                    is_fraud
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            ''', (
+                transaction_id,
+                data['customer_id'],
+                data['transaction_amount'],
+                data.get('timestamp', datetime.now().isoformat()),
+                data.get('channel', 'Unknown'),
+                int(data.get('kyc_verified', 0)),
+                int(data.get('account_age_days', 0)),
+                1 if final_prediction == 'Fraud' else 0
+            ))
+            
+            print("[DEBUG] INSERT executed")
+            
+            conn.commit()
+            print("[DEBUG] Committed to database")
+            
+            conn.close()
+            print(f"✓ Transaction saved: {transaction_id}")
+            
+        except Exception as e:
+            print(f"❌ ERROR storing transaction: {type(e).__name__}: {e}")
+            import traceback
+            traceback.print_exc()
+            # Don't fail the request if storage fails
+        
+        # STEP 7: Return Final Response
         response = {
             'success': True,
             'transaction_id': transaction_id,
@@ -282,12 +413,44 @@ def predict_fraud():
             }
         }
         
+        # Clean response to remove any NaN values
+        def clean_nan(obj):
+            """Recursively clean NaN values from nested dict/list"""
+            if isinstance(obj, dict):
+                return {k: clean_nan(v) for k, v in obj.items()}
+            elif isinstance(obj, list):
+                return [clean_nan(item) for item in obj]
+            elif isinstance(obj, float):
+                if np.isnan(obj) or np.isinf(obj):
+                    return None
+                return obj
+            elif isinstance(obj, (np.integer, np.floating)):
+                val = float(obj) if isinstance(obj, np.floating) else int(obj)
+                if isinstance(val, float) and (np.isnan(val) or np.isinf(val)):
+                    return None
+                return val
+            return obj
+        
+        response = clean_nan(response)
+        
         return jsonify(response)
     
-    except Exception as e:
+    except ValueError as e:
+        # Validation errors - safe to expose
+        logger.warning(f"Validation error: {e}")
         return jsonify({
             'success': False,
             'error': str(e),
+            'error_code': 'VALIDATION_ERROR',
+            'transaction_id': data.get('transaction_id') if data else None
+        }), 400
+    except Exception as e:
+        # Internal errors - don't expose details
+        logger.error(f"Prediction error: {e}", exc_info=True)
+        return jsonify({
+            'success': False,
+            'error': 'An internal error occurred processing the transaction. Please try again.',
+            'error_code': 'PREDICTION_ERROR',
             'transaction_id': data.get('transaction_id') if data else None
         }), 500
 
@@ -445,6 +608,9 @@ def get_transactions():
             # Get total count for pagination
             total_count = db.get_row_count()
             
+            # Replace NaN values with None before converting to dict
+            df = df.replace({np.nan: None, np.inf: None, -np.inf: None})
+            
             # Convert to JSON-friendly format
             transactions = df.to_dict(orient='records')
             
@@ -474,6 +640,10 @@ def get_sample_transactions():
     """
     try:
         df = pd.read_csv(PREVIEW_CSV)
+        
+        # Replace NaN values with None before converting to dict
+        df = df.replace({np.nan: None, np.inf: None, -np.inf: None})
+        
         transactions = df.to_dict(orient='records')
         
         return jsonify({

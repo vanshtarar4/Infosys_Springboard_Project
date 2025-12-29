@@ -1,106 +1,106 @@
-# Byte-compiled / optimized / DLL files
+# Python
 __pycache__/
 *.py[cod]
 *$py.class
-
-# C extensions
 *.so
-
-# Distribution / packaging
 .Python
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-share/python-wheels/
+env/
+venv/
+.venv/
 *.egg-info/
-.installed.cfg
-*.egg
-PIPFILE.lock
+.pytest_cache/
+dist/
+build/
 
-# PyInstaller
-*.manifest
-*.spec
+# Environment variables
+.env
+.env.local
+.env.production
+*.key
+secrets/
 
-# Installer logs
-pip-log.txt
-pip-delete-this-directory.txt
+# Node.js / Frontend
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.next/
+.turbo/
+out/
+.vercel/
 
-# Unit test / coverage reports
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+
+# Database (don't upload real data!)
+*.db
+*.sqlite
+*.sqlite3
+data/transactions.db
+data/*.csv
+
+# Model files (too large for GitHub)
+models/*.joblib
+models/*.pkl
+models/*.npy
+models/*.h5
+models/X_*.npy
+models/y_*.npy
+
+# Keep only small metadata files
+!models/evaluation_metrics.json
+!models/feature_names.json
+!models/model_comparison.json
+!models/model_threshold.json
+
+# Logs
+*.log
+logs/
+*.log.*
+
+# Temporary files
+*.tmp
+*.temp
+.cache/
+
+# OS files
+Thumbs.db
+.DS_Store
+desktop.ini
+
+# AI Assistant artifacts
+.gemini/
+
+# Backups
+*.backup
+*.bak
+*_backup.*
+
+# Large data files
+*.zip
+*.tar.gz
+*.rar
+
+# Jupyter notebooks checkpoints
+.ipynb_checkpoints/
+
+# Coverage reports
 htmlcov/
-.tox/
-.nox/
 .coverage
 .coverage.*
-.cache
-nosetests.xml
 coverage.xml
-*.cover
-*.py,cover
-.hypothesis/
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# pytest
 .pytest_cache/
-cover/
-
-# Translations
-*.mo
-*.pot
-
-# Django stuff:
-*.log
-local_settings.py
-db.sqlite3
-db.sqlite3-journal
-
-# Flask stuff:
-instance/
-.webassets-cache
-
-# Scrapy stuff:
-.scrapy
-
-# Sphinx documentation
-docs/_build/
-
-# PyBuilder
-.pybuilder/
-target/
-
-# Jupyter Notebook
-.ipynb_checkpoints
-
-# IPython
-profile_default/
-ipython_config.py
-
-# pyenv
-.python-version
-
-# pipenv
-Pipfile.lock
-
-# poetry
-poetry.lock
-
-# pdm
-.pdm.toml
-
-# PEP 582
-__pypackages__/
-
-# Celery stuff
-celerybeat-schedule
-celerybeat.pid
-
-# SageMath parsed files
-*.sage.py
 
 # Environments
 .env
@@ -110,45 +110,3 @@ venv/
 ENV/
 env.bak/
 venv.bak/
-
-# Spyder project settings
-.spyderproject
-.spyproject
-
-# Rope project settings
-.ropeproject
-
-# mkdocs documentation
-/site
-
-# mypy
-.mypy_cache/
-.dmypy.json
-dmypy.json
-
-# Pyre type checker
-.pyre/
-
-# pytype static type analyzer
-.pytype/
-
-# Cython debug symbols
-cython_debug/
-
-# IDEs
-.vscode/
-.idea/
-*.swp
-*.swo
-*~
-
-# OS
-.DS_Store
-Thumbs.db
-
-# Project specific
-data/raw/*.csv
-!data/raw/transactions.csv
-models/*.pkl
-models/*.joblib
-*.db

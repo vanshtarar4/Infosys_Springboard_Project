@@ -39,6 +39,7 @@ class RuleEngine:
             'high_risk_amount': 20000,       # High-risk threshold
             'suspicious_hour_start': 2,      # 2 AM
             'suspicious_hour_end': 4,        # 4 AM
+            'low_amount_threshold': 5000,    # Low-risk threshold for small transactions
         }
         
     def load_rules(self):
@@ -68,6 +69,24 @@ class RuleEngine:
                 'priority': 2,
                 'func': self.check_odd_hour,
                 'reason': 'Transaction during suspicious hours (2-4 AM)'
+            },
+            {
+                'name': 'low_amount_trust',
+                'priority': 1,
+                'func': self.check_low_amount,
+                'reason': 'Low transaction amount (reasonable spending)'
+            },
+            {
+                'name': 'established_customer_discount',
+                'priority': 1,
+                'func': self.check_established_customer,
+                'reason': 'Established verified customer (trust discount)'
+            },
+            {
+                'name': 'good_customer_history',
+                'priority': 1,
+                'func': self.check_customer_history,
+                'reason': 'Customer has clean transaction history'
             }
         ]
         
@@ -126,19 +145,30 @@ class RuleEngine:
             except Exception as e:
                 logger.error(f"Error evaluating rule '{rule['name']}': {e}")
         
-        # Calculate rule-based risk score (max of triggered rules)
-        rule_risk_score = max(rule_risk_scores) if rule_risk_scores else 0.0
+        # Calculate rule-based risk score
+        # Separate positive (risk increase) and negative (risk decrease) rules
+        positive_rules = [score for score in rule_risk_scores if score > 0]
+        negative_rules = [score for score in rule_risk_scores if score < 0]
+        
+        # Max of positive rules, sum of negative adjustments
+        rule_risk_increase = max(positive_rules) if positive_rules else 0.0
+        rule_risk_decrease = sum(negative_rules)  # Negative values
+        rule_risk_score = max(0.0, rule_risk_increase + rule_risk_decrease)  # Can't go below 0
         
         # Combine with ML prediction
         if ml_prediction:
             ml_risk_score = ml_prediction.get('risk_score', 0.0)
             ml_prediction_result = ml_prediction.get('prediction', 'Legitimate')
             
-            # Final risk score = max(ML score, rule score)
-            final_risk_score = max(ml_risk_score, rule_risk_score)
+            # Apply rule adjustments to ML score
+            adjusted_ml_score = max(0.0, min(1.0, ml_risk_score + rule_risk_decrease))
             
-            # Final decision: Fraud if ANY rule triggers OR ML predicts fraud
-            final_prediction = "Fraud" if (triggered_rules or ml_prediction_result == "Fraud") else "Legitimate"
+            # Final risk score = max of (adjusted ML score, rule risk increase)
+            final_risk_score = max(adjusted_ml_score, rule_risk_increase)
+            
+            # Final decision: Fraud if ANY high-priority rule triggers OR ML predicts fraud (after adjustments)
+            high_priority_rules = [r for r in triggered_rules if r['risk_contribution'] > 0.5]
+            final_prediction = "Fraud" if (high_priority_rules or ml_prediction_result == "Fraud") else "Legitimate"
         else:
             # Rules only (no ML)
             final_risk_score = rule_risk_score
@@ -298,6 +328,90 @@ class RuleEngine:
             logger.error(f"Error getting customer average: {e}")
         
         return None
+    
+    def check_low_amount(self, transaction_data: Dict) -> Tuple[bool, float]:
+        """
+        Rule 5: Trust discount for low transaction amounts.
+        Reduces risk for transactions under $5000 (typical daily spending).
+        
+        Args:
+            transaction_data: Current transaction
+            
+        Returns:
+            (triggered, risk_reduction)
+        """
+        transaction_amount = float(transaction_data.get('transaction_amount', 0))
+        low_threshold = self.rules_config.get('low_amount_threshold', 5000)
+        
+        # Low amount = less risky (unless other major red flags)
+        if transaction_amount > 0 and transaction_amount < low_threshold:
+            # Give 30% risk reduction for low amounts
+            return True, -0.30
+        
+        return False, 0.0
+    
+    def check_established_customer(self, transaction_data: Dict) -> Tuple[bool, float]:
+        """
+        Rule 5: Whitelist for established verified customers.
+        Reduces risk score for trusted customers.
+        
+        Args:
+            transaction_data: Current transaction
+            
+        Returns:
+            (triggered, risk_reduction)
+        """
+        kyc_verified = int(transaction_data.get('kyc_verified', 0))
+        account_age_days = float(transaction_data.get('account_age_days', 0))
+        
+        # Established customer: KYC verified + account age > 1 year
+        if kyc_verified == 1 and account_age_days >= 365:
+            return True, -0.20  # Negative = reduces risk by 20%
+        
+        return False, 0.0
+    
+    def check_customer_history(self, transaction_data: Dict) -> Tuple[bool, float]:
+        """
+        Rule 6: Check customer's historical transaction record.
+        Reduces risk if customer has clean history.
+        
+        Args:
+            transaction_data: Current transaction
+            
+        Returns:
+            (triggered, risk_reduction)
+        """
+        customer_id = transaction_data.get('customer_id')
+        
+        if not customer_id:
+            return False, 0.0
+        
+        try:
+            conn = sqlite3.connect(self.db_path)
+            cursor = conn.cursor()
+            
+            # Check if customer has at least 10 transactions with 0 fraud
+            cursor.execute('''
+                SELECT COUNT(*) as total, SUM(is_fraud) as fraud_count
+                FROM transactions
+                WHERE customer_id = ?
+            ''', (customer_id,))
+            
+            result = cursor.fetchone()
+            conn.close()
+            
+            if result and result[0]:
+                total_txn = int(result[0])
+                fraud_count = int(result[1]) if result[1] else 0
+                
+                # Good customer: 10+ transactions, all legitimate
+                if total_txn >= 10 and fraud_count == 0:
+                    return True, -0.15  # Reduce risk by 15%
+                    
+        except Exception as e:
+            logger.error(f"Error checking customer history: {e}")
+        
+        return False, 0.0
     
     def get_triggered_rules(self, transaction_data: Dict) -> List[str]:
         """

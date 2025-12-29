@@ -1,7 +1,28 @@
-'use client';
+'use client'
 
-import { useState } from 'react';
-import Link from 'next/link';
+import { useState } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
+import Link from 'next/link'
+import {
+    Shield,
+    ArrowLeft,
+    Loader2,
+    AlertTriangle,
+    TrendingDown,
+    TrendingUp,
+    Clock,
+    User,
+    DollarSign,
+    Calendar,
+    Globe,
+    CheckCircle2,
+    XCircle,
+} from 'lucide-react'
+import RiskMeter from '@/components/ui/RiskMeter'
+import StatusBadge from '@/components/ui/StatusBadge'
+import PageTransition from '@/components/layout/PageTransition'
+import FeedbackWidget from '@/components/feedback/FeedbackWidget'
+import { slideInFromRight, fadeIn } from '@/utils/animations'
 
 export default function FraudDetectionPage() {
     const [formData, setFormData] = useState({
@@ -11,20 +32,24 @@ export default function FraudDetectionPage() {
         account_age_days: '',
         channel: 'Web',
         timestamp: new Date().toISOString().slice(0, 16)
-    });
+    })
 
-    const [prediction, setPrediction] = useState<any>(null);
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState('');
+    const [prediction, setPrediction] = useState<any>(null)
+    const [loading, setLoading] = useState(false)
+    const [error, setError] = useState('')
 
     const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setLoading(true);
-        setError('');
-        setPrediction(null);
+        e.preventDefault()
+        setLoading(true)
+        setError('')
+        setPrediction(null)
+
+        const controller = new AbortController()
+        const timeoutId = setTimeout(() => controller.abort(), 30000)
 
         try {
-            const response = await fetch('http://localhost:8001/api/predict', {
+            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8001'
+            const response = await fetch(`${apiUrl}/api/predict`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -32,22 +57,29 @@ export default function FraudDetectionPage() {
                     transaction_amount: parseFloat(formData.transaction_amount),
                     kyc_verified: parseInt(formData.kyc_verified),
                     account_age_days: parseInt(formData.account_age_days) || 0
-                })
-            });
+                }),
+                signal: controller.signal
+            })
 
-            const data = await response.json();
+            clearTimeout(timeoutId)
+            const data = await response.json()
 
             if (data.success) {
-                setPrediction(data);
+                setPrediction(data)
             } else {
-                setError(data.error || 'Prediction failed');
+                setError(data.error || 'Prediction failed')
             }
-        } catch (err) {
-            setError('Failed to connect to API. Make sure backend is running on port 8001.');
+        } catch (err: any) {
+            clearTimeout(timeoutId)
+            if (err.name === 'AbortError') {
+                setError('Request timeout. Please try again.')
+            } else {
+                setError('Failed to connect to API')
+            }
         } finally {
-            setLoading(false);
+            setLoading(false)
         }
-    };
+    }
 
     const resetForm = () => {
         setFormData({
@@ -57,246 +89,317 @@ export default function FraudDetectionPage() {
             account_age_days: '',
             channel: 'Web',
             timestamp: new Date().toISOString().slice(0, 16)
-        });
-        setPrediction(null);
-        setError('');
-    };
+        })
+        setPrediction(null)
+        setError('')
+    }
+
+    // Calculate risk score percentage
+    const riskScore = prediction?.risk_score
+        ? Math.round(prediction.risk_score * 100)
+        : 0
+
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white p-8">
-            <div className="max-w-7xl mx-auto">
-                {/* Header */}
-                <div className="mb-8">
-                    <Link href="/" className="text-emerald-400 hover:text-emerald-300 mb-4 inline-flex items-center gap-2">
-                        <span>←</span> Back to Dashboard
-                    </Link>
-                    <h1 className="text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-emerald-400 to-teal-400 mt-4">
-                        Fraud Detection Lab
-                    </h1>
-                    <p className="text-slate-400 mt-2">Submit a transaction to evaluate fraud risk using hybrid ML + Rules engine</p>
+        <div className="space-y-8">
+            {/* Header */}
+            <motion.div
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+            >
+                <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
+                        <Shield className="w-6 h-6 text-primary" />
+                    </div>
+                    <div>
+                        <h1 className="text-3xl font-bold text-foreground">
+                            Fraud Detection Lab
+                        </h1>
+                        <p className="text-muted-foreground">
+                            Real-time transaction evaluation with AI-powered analysis
+                        </p>
+                    </div>
                 </div>
+            </motion.div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                    {/* Form */}
-                    <div className="bg-slate-800/50 backdrop-blur-sm border border-slate-700 rounded-xl p-6 shadow-2xl">
-                        <div className="flex items-center justify-between mb-6">
-                            <h2 className="text-2xl font-semibold text-emerald-400">Fraud Detection Simulator</h2>
-                            <div className="w-10 h-10 bg-emerald-500/20 rounded-full flex items-center justify-center">
-                                <span className="text-2xl">🛡️</span>
+            {/* Main Content Grid */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                {/* Input Panel */}
+                <motion.div
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.1 }}
+                    className="glass rounded-xl border border-border p-6"
+                >
+                    <h2 className="text-xl font-semibold text-foreground mb-6">
+                        Transaction Details
+                    </h2>
+
+                    <form onSubmit={handleSubmit} className="space-y-4">
+                        {/* Customer ID */}
+                        <div>
+                            <label className="block text-sm font-medium text-foreground mb-2">
+                                <User className="w-4 h-4 inline mr-2" />
+                                Customer ID
+                            </label>
+                            <input
+                                type="text"
+                                value={formData.customer_id}
+                                onChange={(e) => setFormData({ ...formData, customer_id: e.target.value })}
+                                className="w-full px-4 py-2 bg-background border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all text-foreground"
+                                placeholder="e.g., C12345"
+                                required
+                            />
+                        </div>
+
+                        {/* Transaction Amount */}
+                        <div>
+                            <label className="block text-sm font-medium text-foreground mb-2">
+                                <DollarSign className="w-4 h-4 inline mr-2" />
+                                Amount
+                            </label>
+                            <input
+                                type="number"
+                                step="0.01"
+                                value={formData.transaction_amount}
+                                onChange={(e) => setFormData({ ...formData, transaction_amount: e.target.value })}
+                                className="w-full px-4 py-2 bg-background border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all text-foreground"
+                                placeholder="e.g., 1500.00"
+                                required
+                            />
+                        </div>
+
+                        {/* Channel */}
+                        <div>
+                            <label className="block text-sm font-medium text-foreground mb-2">
+                                <XCircle className="w-4 h-4 inline mr-2" />
+                                Channel
+                            </label>
+                            <select
+                                value={formData.channel}
+                                onChange={(e) => setFormData({ ...formData, channel: e.target.value })}
+                                className="w-full px-4 py-2 bg-background border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all text-foreground cursor-pointer"
+                            >
+                                <option value="Web">Web</option>
+                                <option value="Mobile">Mobile</option>
+                                <option value="ATM">ATM</option>
+                                <option value="POS">POS</option>
+                                <option value="International">International</option>
+                            </select>
+                        </div>
+
+                        {/* KYC Verified */}
+                        <div>
+                            <label className="block text-sm font-medium text-foreground mb-2">
+                                KYC Status
+                            </label>
+                            <div className="flex gap-4">
+                                <label className="flex items-center gap-2 cursor-pointer">
+                                    <input
+                                        type="radio"
+                                        value="1"
+                                        checked={formData.kyc_verified === '1'}
+                                        onChange={(e) => setFormData({ ...formData, kyc_verified: e.target.value })}
+                                        className="w-4 h-4 text-primary focus:ring-primary"
+                                    />
+                                    <span className="text-sm">Verified</span>
+                                </label>
+                                <label className="flex items-center gap-2 cursor-pointer">
+                                    <input
+                                        type="radio"
+                                        value="0"
+                                        checked={formData.kyc_verified === '0'}
+                                        onChange={(e) => setFormData({ ...formData, kyc_verified: e.target.value })}
+                                        className="w-4 h-4 text-primary focus:ring-primary"
+                                    />
+                                    <span className="text-sm">Not Verified</span>
+                                </label>
                             </div>
                         </div>
-                        <p className="text-sm text-slate-400 mb-6">Submit a single transaction payload to evaluate its fraud risk using the hybrid ML + rules engine.</p>
 
-                        <form onSubmit={handleSubmit} className="space-y-4">
-                            <div>
-                                <label className="block text-sm font-medium mb-2">Customer ID</label>
-                                <input
-                                    type="text"
-                                    value={formData.customer_id}
-                                    onChange={(e) => setFormData({ ...formData, customer_id: e.target.value })}
-                                    className="w-full px-4 py-2.5 bg-slate-900 border border-slate-600 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:outline-none transition"
-                                    placeholder="e.g., C12345"
-                                    required
-                                />
-                            </div>
+                        {/* Account Age */}
+                        <div>
+                            <label className="block text-sm font-medium text-foreground mb-2">
+                                <Clock className="w-4 h-4 inline mr-2" />
+                                Account Age (days)
+                            </label>
+                            <input
+                                type="number"
+                                value={formData.account_age_days}
+                                onChange={(e) => setFormData({ ...formData, account_age_days: e.target.value })}
+                                className="w-full px-4 py-2 bg-background border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all text-foreground"
+                                placeholder="e.g., 180"
+                            />
+                        </div>
 
-                            <div>
-                                <label className="block text-sm font-medium mb-2">Transaction Amount ($)</label>
-                                <input
-                                    type="number"
-                                    step="0.01"
-                                    value={formData.transaction_amount}
-                                    onChange={(e) => setFormData({ ...formData, transaction_amount: e.target.value })}
-                                    className="w-full px-4 py-2.5 bg-slate-900 border border-slate-600 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:outline-none transition"
-                                    placeholder="e.g., 5000"
-                                    required
-                                />
-                            </div>
+                        {/* Action Buttons */}
+                        <div className="flex gap-3 pt-4">
+                            <motion.button
+                                whileHover={{ scale: 1.02, boxShadow: "0 0 20px rgba(23, 184, 151, 0.4)" }}
+                                whileTap={{ scale: 0.98 }}
+                                type="submit"
+                                disabled={loading}
+                                className="flex-1 px-6 py-3 bg-gradient-to-r from-primary to-primary/80 text-primary-foreground rounded-lg font-semibold hover:from-primary/90 hover:to-primary/70 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg shadow-primary/20"
+                            >
+                                {loading ? (
+                                    <>
+                                        <Loader2 className="w-5 h-5 animate-spin" />
+                                        Analyzing...
+                                    </>
+                                ) : (
+                                    <>
+                                        <Shield className="w-5 h-5" />
+                                        Analyze Transaction
+                                    </>
+                                )}
+                            </motion.button>
+                            <motion.button
+                                whileHover={{ scale: 1.02 }}
+                                whileTap={{ scale: 0.98 }}
+                                type="button"
+                                onClick={resetForm}
+                                className="px-6 py-3 bg-card hover:bg-card-hover border border-border rounded-lg font-medium transition-colors"
+                            >
+                                Reset
+                            </motion.button>
+                        </div>
+                    </form>
+                </motion.div>
 
-                            <div>
-                                <label className="block text-sm font-medium mb-2">KYC Verified</label>
-                                <select
-                                    value={formData.kyc_verified}
-                                    onChange={(e) => setFormData({ ...formData, kyc_verified: e.target.value })}
-                                    className="w-full px-4 py-2.5 bg-slate-900 border border-slate-600 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:outline-none transition"
-                                >
-                                    <option value="1">Yes (1)</option>
-                                    <option value="0">No (0)</option>
-                                </select>
-                            </div>
-
-                            <div>
-                                <label className="block text-sm font-medium mb-2">Account Age (days)</label>
-                                <input
-                                    type="number"
-                                    value={formData.account_age_days}
-                                    onChange={(e) => setFormData({ ...formData, account_age_days: e.target.value })}
-                                    className="w-full px-4 py-2.5 bg-slate-900 border border-slate-600 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:outline-none transition"
-                                    placeholder="e.g., 100"
-                                />
-                            </div>
-
-                            <div>
-                                <label className="block text-sm font-medium mb-2">Channel</label>
-                                <select
-                                    value={formData.channel}
-                                    onChange={(e) => setFormData({ ...formData, channel: e.target.value })}
-                                    className="w-full px-4 py-2.5 bg-slate-900 border border-slate-600 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:outline-none transition"
-                                >
-                                    <option value="Web">Web</option>
-                                    <option value="Mobile">Mobile</option>
-                                    <option value="POS">POS</option>
-                                    <option value="ATM">ATM</option>
-                                    <option value="International">International</option>
-                                    <option value="Other">Other</option>
-                                </select>
-                            </div>
-
-                            <div>
-                                <label className="block text-sm font-medium mb-2">Timestamp</label>
-                                <input
-                                    type="datetime-local"
-                                    value={formData.timestamp}
-                                    onChange={(e) => setFormData({ ...formData, timestamp: e.target.value })}
-                                    className="w-full px-4 py-2.5 bg-slate-900 border border-slate-600 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:outline-none transition"
-                                />
-                            </div>
-
-                            <div className="flex gap-3 pt-2">
-                                <button
-                                    type="submit"
-                                    disabled={loading}
-                                    className="flex-1 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-emerald-500/20"
-                                >
-                                    {loading ? 'Analyzing...' : '🔍 Run Prediction'}
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={resetForm}
-                                    className="px-6 py-3 bg-slate-700 hover:bg-slate-600 rounded-lg transition"
-                                >
-                                    Reset
-                                </button>
-                            </div>
-                        </form>
-
-                        {error && (
-                            <div className="mt-4 p-4 bg-red-900/50 border border-red-700 rounded-lg text-red-200 text-sm">
-                                ⚠️ {error}
-                            </div>
-                        )}
-                    </div>
-
-                    {/* Results */}
-                    <div className="space-y-6">
-                        <div className="bg-slate-800/50 backdrop-blur-sm border border-slate-700 rounded-xl p-6 shadow-2xl">
-                            <h2 className="text-2xl font-semibold text-emerald-400 mb-6">Prediction Result</h2>
-
-                            {loading && (
-                                <div className="flex items-center justify-center h-64">
-                                    <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-emerald-500"></div>
+                {/* Result Panel */}
+                <div className="lg:sticky lg:top-8 h-fit">
+                    <AnimatePresence mode="wait">
+                        {error ? (
+                            <motion.div
+                                key="error"
+                                variants={slideInFromRight}
+                                initial="initial"
+                                animate="animate"
+                                exit="exit"
+                                className="glass rounded-xl border border-danger/20 p-8 text-center"
+                            >
+                                <AlertTriangle className="w-16 h-16 text-danger mx-auto mb-4" />
+                                <h3 className="text-xl font-semibold text-foreground mb-2">Error</h3>
+                                <p className="text-muted-foreground">{error}</p>
+                            </motion.div>
+                        ) : prediction ? (
+                            <motion.div
+                                key="result"
+                                variants={slideInFromRight}
+                                initial="initial"
+                                animate="animate"
+                                exit="exit"
+                                className="glass rounded-xl border border-border p-8 space-y-6"
+                            >
+                                {/* Risk Meter */}
+                                <div className="flex justify-center">
+                                    <RiskMeter score={riskScore} delay={0.2} />
                                 </div>
-                            )}
 
-                            {prediction && !loading && (
-                                <div className="space-y-4 animate-fadeIn">
-                                    {/* Classification */}
-                                    <div className={`p-6 rounded-xl border-2 ${prediction.prediction === 'Fraud'
-                                            ? 'bg-red-900/30 border-red-500'
-                                            : 'bg-green-900/30 border-green-500'
-                                        }`}>
-                                        <div className="text-center">
-                                            <div className="text-6xl mb-4">
-                                                {prediction.prediction === 'Fraud' ? '⚠️' : '✅'}
-                                            </div>
-                                            <h3 className="text-3xl font-bold mb-2">
-                                                {prediction.prediction}
-                                            </h3>
-                                            <p className="text-slate-300 text-sm">
-                                                Transaction ID: {prediction.transaction_id}
-                                            </p>
-                                        </div>
-                                    </div>
+                                {/* Prediction Badge */}
+                                <div className="text-center">
+                                    <StatusBadge
+                                        status={prediction.prediction === 'Fraud' ? 'FRAUD' : 'LEGITIMATE'}
+                                        severity={prediction.prediction === 'Fraud' ? 'CRITICAL' : 'LOW'}
+                                        animate={prediction.prediction === 'Fraud'}
+                                        size="lg"
+                                    />
+                                    <p className="text-sm text-muted-foreground mt-2">
+                                        {prediction.prediction === 'Fraud' ? 'Transaction flagged as fraudulent' : 'Transaction appears legitimate'}
+                                    </p>
+                                </div>
 
-                                    {/* Risk Score */}
-                                    <div className="bg-slate-900/50 rounded-xl p-6">
-                                        <div className="flex justify-between items-center mb-2">
-                                            <span className="font-medium">Final Risk Score</span>
-                                            <span className="text-2xl font-bold text-emerald-400">
-                                                {(prediction.risk_score * 100).toFixed(1)}%
-                                            </span>
-                                        </div>
-                                        <div className="w-full bg-slate-700 rounded-full h-4 overflow-hidden">
-                                            <div
-                                                className={`h-full transition-all duration-1000 ${prediction.risk_score >= 0.7 ? 'bg-red-500' :
-                                                        prediction.risk_score >= 0.4 ? 'bg-yellow-500' :
-                                                            'bg-green-500'
-                                                    }`}
-                                                style={{ width: `${prediction.risk_score * 100}%` }}
-                                            />
-                                        </div>
-                                        <div className="mt-4 grid grid-cols-2 gap-4 text-sm">
-                                            <div>
-                                                <span className="text-slate-400">ML Score:</span>
-                                                <span className="ml-2 text-white font-semibold">{(prediction.details.ml_risk_score * 100).toFixed(1)}%</span>
-                                            </div>
-                                            <div>
-                                                <span className="text-slate-400">Rule Score:</span>
-                                                <span className="ml-2 text-white font-semibold">{(prediction.details.rule_risk_score * 100).toFixed(1)}%</span>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    {/* Explanation */}
-                                    <div className="bg-blue-900/20 border border-blue-700 rounded-xl p-6">
-                                        <h4 className="font-semibold text-lg mb-3 text-blue-300 flex items-center gap-2">
-                                            <span>💡</span> Risk Explanation
+                                {/* Triggered Rules */}
+                                {prediction.details?.triggered_rules && prediction.details.triggered_rules.length > 0 && (
+                                    <motion.div
+                                        initial={{ opacity: 0, y: 10 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        transition={{ delay: 0.5 }}
+                                        className="p-4 bg-danger/5 border border-danger/20 rounded-lg"
+                                    >
+                                        <h4 className="text-sm font-semibold text-foreground mb-2">
+                                            Triggered Rules ({prediction.details.triggered_rules.length})
                                         </h4>
-                                        <p className="text-slate-200 leading-relaxed">
-                                            {prediction.reason}
+                                        <ul className="space-y-1">
+                                            {prediction.details.triggered_rules.map((rule: string, idx: number) => (
+                                                <li key={idx} className="text-sm text-muted-foreground flex items-start gap-2">
+                                                    <span className="text-danger mt-0.5">•</span>
+                                                    <span>{rule}</span>
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    </motion.div>
+                                )}
+
+                                {/* LLM Explanation */}
+                                {prediction.explanation && (
+                                    <motion.div
+                                        initial={{ opacity: 0, y: 10 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        transition={{ delay: 0.7 }}
+                                        className="p-4 bg-card border border-border rounded-lg"
+                                    >
+                                        <h4 className="text-sm font-semibold text-foreground mb-2 flex items-center gap-2">
+                                            <span className="text-primary">✨</span>
+                                            AI Explanation
+                                        </h4>
+                                        <p className="text-sm text-muted-foreground leading-relaxed">
+                                            {prediction.explanation}
                                         </p>
-                                    </div>
+                                    </motion.div>
+                                )}
 
-                                    {/* Triggered Rules */}
-                                    {prediction.details.triggered_rules.length > 0 && (
-                                        <div className="bg-orange-900/20 border border-orange-700 rounded-xl p-6">
-                                            <h4 className="font-semibold text-lg mb-3 text-orange-300">
-                                                Triggered Rules ({prediction.details.rules_count})
-                                            </h4>
-                                            <ul className="space-y-2">
-                                                {prediction.details.triggered_rules.map((rule: string, idx: number) => (
-                                                    <li key={idx} className="flex items-start gap-2 text-sm">
-                                                        <span className="text-orange-400 mt-0.5">●</span>
-                                                        <span className="text-slate-200">{rule}</span>
-                                                    </li>
-                                                ))}
-                                            </ul>
-                                        </div>
-                                    )}
+                                {/* Alert ID */}
+                                {prediction.alert_id && (
+                                    <motion.div
+                                        initial={{ opacity: 0 }}
+                                        animate={{ opacity: 1 }}
+                                        transition={{ delay: 0.9 }}
+                                        className="text-center text-xs text-muted-foreground"
+                                    >
+                                        Alert ID: {prediction.alert_id}
+                                    </motion.div>
+                                )}
 
-                                    {/* Alert Info */}
-                                    {prediction.details.alert_id && (
-                                        <div className="bg-slate-900/50 rounded-xl p-4 text-sm">
-                                            <span className="text-slate-400">Alert ID:</span>
-                                            <span className="ml-2 text-emerald-400 font-mono">#{prediction.details.alert_id}</span>
-                                            <span className="ml-4 text-slate-500">● Saved to fraud_alerts table</span>
-                                        </div>
-                                    )}
+                                {/* Feedback Collection Widget */}
+                                <motion.div
+                                    initial={{ opacity: 0, y: 20 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ delay: 1.0 }}
+                                    className="mt-6 p-6 bg-gradient-to-br from-blue-500/5 to-purple-500/5 rounded-xl border border-blue-500/10"
+                                >
+                                    <FeedbackWidget
+                                        transactionId={prediction.transaction_id}
+                                        prediction={prediction.prediction}
+                                        onFeedbackSubmitted={() => {
+                                            console.log('Feedback submitted - continuous learning active');
+                                        }}
+                                    />
+                                </motion.div>
+                            </motion.div>
+                        ) : (
+                            <motion.div
+                                key="empty"
+                                variants={fadeIn}
+                                initial="initial"
+                                animate="animate"
+                                exit="exit"
+                                className="glass rounded-xl border border-border p-12 text-center"
+                            >
+                                <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
+                                    <Shield className="w-8 h-8 text-primary" />
                                 </div>
-                            )}
-
-                            {!prediction && !loading && (
-                                <div className="flex items-center justify-center h-64 text-slate-500">
-                                    <div className="text-center">
-                                        <div className="text-6xl mb-4">📊</div>
-                                        <p>Submit a transaction to see prediction</p>
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-                    </div>
+                                <h3 className="text-lg font-semibold text-foreground mb-2">
+                                    Ready to Analyze
+                                </h3>
+                                <p className="text-sm text-muted-foreground max-w-sm mx-auto">
+                                    Fill in the transaction details and click "Analyze Transaction" to get real-time fraud detection results
+                                </p>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
                 </div>
             </div>
         </div>
-    );
+    )
 }

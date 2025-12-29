@@ -98,7 +98,8 @@ class RealtimePredictor:
         timestamp_str = transaction_data.get('timestamp', datetime.now().isoformat())
         try:
             timestamp = pd.to_datetime(timestamp_str)
-        except:
+        except (ValueError, TypeError, Exception) as e:
+            logger.warning(f"Invalid timestamp format '{timestamp_str}': {e}. Using current time.")
             timestamp = datetime.now()
         
         # Build numeric features (7 features)
@@ -141,8 +142,9 @@ class RealtimePredictor:
         # One-hot encode channel (5 features: ATM, Mobile, Other, POS, Web)
         try:
             categorical_encoded = self.encoder.transform([[channel_normalized]])
-        except:
+        except (ValueError, Exception) as e:
             # If unknown channel, use 'Other'
+            logger.warning(f"Unknown channel '{channel_normalized}': {e}. Using 'Other'.")
             categorical_encoded = self.encoder.transform([['Other']])
         
         # Combine features: [7 numeric scaled] + [5 categorical one-hot] = 12 features

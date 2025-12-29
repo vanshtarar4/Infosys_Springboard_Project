@@ -234,14 +234,16 @@ class AlertManager:
                 if alert_dict.get('triggered_rules'):
                     try:
                         alert_dict['triggered_rules'] = json.loads(alert_dict['triggered_rules'])
-                    except:
-                        pass
+                    except (json.JSONDecodeError, TypeError) as e:
+                        logger.warning(f"Failed to parse triggered_rules JSON: {e}")
+                        alert_dict['triggered_rules'] = []
                 
                 if alert_dict.get('metadata'):
                     try:
                         alert_dict['metadata'] = json.loads(alert_dict['metadata'])
-                    except:
-                        pass
+                    except (json.JSONDecodeError, TypeError) as e:
+                        logger.warning(f"Failed to parse metadata JSON: {e}")
+                        alert_dict['metadata'] = {}
                 
                 alerts.append(alert_dict)
             

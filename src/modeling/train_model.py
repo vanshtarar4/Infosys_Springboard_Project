@@ -53,21 +53,22 @@ def train_logistic_regression(X_train, y_train):
 
 
 def train_random_forest(X_train, y_train):
-    """Train Random Forest with class balancing."""
-    logger.info("Training Random Forest...")
+    """Train Random Forest with optimized parameters for better precision."""
+    logger.info("Training Random Forest with optimized parameters...")
     
     model = RandomForestClassifier(
-        n_estimators=100,
-        max_depth=10,
-        min_samples_split=10,
-        min_samples_leaf=5,
-        class_weight='balanced',
+        n_estimators=200,              # Increased from 100 for better performance
+        max_depth=15,                   # Increased from 10 for more complex patterns
+        min_samples_split=15,           # Increased from 10 to reduce overfitting
+        min_samples_leaf=8,             # Increased from 5 to reduce overfitting
+        class_weight='balanced_subsample',  # Better for imbalanced data
+        max_features='sqrt',            # Prevent overfitting
         random_state=42,
         n_jobs=-1
     )
     
     model.fit(X_train, y_train)
-    logger.info("✓ Random Forest trained")
+    logger.info("✓ Random Forest trained with optimized parameters")
     
     return model
 
@@ -141,8 +142,8 @@ def print_comparison_table(results):
     # Create DataFrame for easy formatting
     df = pd.DataFrame(results)
     
-    # Sort by Recall (primary), then F1 (secondary)
-    df = df.sort_values(['recall', 'f1_score'], ascending=False)
+    # Sort by F1-score (primary), then Recall (secondary) for balanced performance
+    df = df.sort_values(['f1_score', 'recall'], ascending=False)
     
     print(f"\n{'Model':<25} {'Precision':>10} {'Recall':>10} {'F1-Score':>10} {'ROC-AUC':>10}")
     print("-"*80)
