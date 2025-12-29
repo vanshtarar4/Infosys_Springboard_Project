@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useState, useEffect } from 'react'
+import { useTheme } from '@/contexts/ThemeContext'
 import {
     LayoutDashboard,
     Search,
@@ -35,6 +36,7 @@ const bottomNavItems = [
 ]
 
 export default function Sidebar() {
+    const { theme } = useTheme()
     const [isCollapsed, setIsCollapsed] = useState(false)
     const [isMobile, setIsMobile] = useState(false)
     const pathname = usePathname()
@@ -58,7 +60,10 @@ export default function Sidebar() {
         <motion.aside
             initial={{ x: -280 }}
             animate={{ x: 0 }}
-            className="fixed left-0 top-0 h-screen w-64 border-r border-border glass z-40 flex flex-col"
+            style={{
+                backgroundColor: theme === 'dark' ? 'hsl(222, 47%, 15%)' : 'hsl(210, 40%, 96%)'
+            }}
+            className="fixed left-0 top-0 h-screen w-64 border-r border-border z-40 flex flex-col"
         >
             {/* Logo Section */}
             <div className="h-16 flex items-center justify-between px-4 border-b border-border">
