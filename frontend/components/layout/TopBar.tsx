@@ -2,7 +2,7 @@
 
 import { motion, AnimatePresence } from 'framer-motion'
 import { Bell, Sun, Moon, User, LogOut, ChevronDown } from 'lucide-react'
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useTheme } from '@/contexts/ThemeContext'
 import { dropdownVariants } from '@/utils/animations'
 
@@ -11,6 +11,24 @@ export default function TopBar() {
     const [showNotifications, setShowNotifications] = useState(false)
     const [showUserMenu, setShowUserMenu] = useState(false)
     const [notificationCount] = useState(3)
+
+    const notificationRef = useRef<HTMLDivElement>(null)
+    const userMenuRef = useRef<HTMLDivElement>(null)
+
+    // Close dropdowns when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (notificationRef.current && !notificationRef.current.contains(event.target as Node)) {
+                setShowNotifications(false)
+            }
+            if (userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) {
+                setShowUserMenu(false)
+            }
+        }
+
+        document.addEventListener('mousedown', handleClickOutside)
+        return () => document.removeEventListener('mousedown', handleClickOutside)
+    }, [])
 
     return (
         <motion.header
@@ -50,7 +68,7 @@ export default function TopBar() {
                     </motion.div>
 
                     {/* Notifications */}
-                    <div className="relative">
+                    <div className="relative" ref={notificationRef}>
                         <motion.button
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
@@ -61,11 +79,11 @@ export default function TopBar() {
                             className="relative w-10 h-10 rounded-lg bg-card hover:bg-card-hover border border-border flex items-center justify-center transition-colors"
                         >
                             <Bell className="w-5 h-5 text-muted-foreground" />
-                            {notificationCount > 0 && (
+                            {notificationCount > 0 && !showNotifications && (
                                 <motion.span
                                     initial={{ scale: 0 }}
                                     animate={{ scale: 1 }}
-                                    className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-danger text-white dark:text-white text-white text-xs font-bold flex items-center justify-center shadow-md"
+                                    className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-gradient-to-br from-red-500 to-red-600 text-white text-xs font-bold flex items-center justify-center shadow-lg ring-2 ring-background"
                                 >
                                     {notificationCount}
                                 </motion.span>
@@ -80,7 +98,7 @@ export default function TopBar() {
                                     animate="open"
                                     exit="closed"
                                     variants={dropdownVariants}
-                                    className="absolute right-0 mt-2 w-80 glass border border-border rounded-lg shadow-xl overflow-hidden"
+                                    className="absolute right-0 mt-2 w-80 bg-card/95 backdrop-blur-xl border border-border rounded-lg shadow-2xl overflow-hidden"
                                 >
                                     <div className="p-4 border-b border-border">
                                         <h3 className="font-semibold text-foreground">Notifications</h3>
