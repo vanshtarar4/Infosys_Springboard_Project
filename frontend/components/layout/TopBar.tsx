@@ -98,12 +98,12 @@ export default function TopBar() {
                                     animate="open"
                                     exit="closed"
                                     variants={dropdownVariants}
-                                    className="absolute right-0 mt-2 w-80 bg-card/95 backdrop-blur-xl border border-border rounded-lg shadow-2xl overflow-hidden z-50"
+                                    className="absolute right-0 mt-2 w-80 bg-card border border-border rounded-lg shadow-2xl overflow-hidden z-[100]"
                                 >
-                                    <div className="p-4 border-b border-border">
+                                    <div className="p-4 border-b border-border bg-card">
                                         <h3 className="font-semibold text-foreground">Notifications</h3>
                                     </div>
-                                    <div className="max-h-96 overflow-y-auto">
+                                    <div className="max-h-96 overflow-y-auto bg-card">
                                         {[1, 2, 3].map((i) => (
                                             <motion.div
                                                 key={i}
@@ -129,7 +129,7 @@ export default function TopBar() {
                                             </motion.div>
                                         ))}
                                     </div>
-                                    <div className="p-3 border-t border-border">
+                                    <div className="p-3 border-t border-border bg-card">
                                         <button className="w-full text-sm text-primary hover:text-primary/80 font-medium transition-colors">
                                             View all notifications
                                         </button>
@@ -198,13 +198,13 @@ export default function TopBar() {
                                     animate="open"
                                     exit="closed"
                                     variants={dropdownVariants}
-                                    className="absolute right-0 mt-2 w-56 glass border border-border rounded-lg shadow-xl overflow-hidden z-50"
+                                    className="absolute right-0 mt-2 w-56 bg-card border border-border rounded-lg shadow-2xl overflow-hidden z-[100]"
                                 >
-                                    <div className="p-3 border-b border-border">
+                                    <div className="p-3 border-b border-border bg-card">
                                         <p className="text-sm font-medium text-foreground">Admin User</p>
                                         <p className="text-xs text-muted-foreground">admin@secureguard.ai</p>
                                     </div>
-                                    <div className="p-2">
+                                    <div className="p-2 bg-card">
                                         <motion.button
                                             whileHover={{ x: 4 }}
                                             className="w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-card-hover text-left transition-colors"
