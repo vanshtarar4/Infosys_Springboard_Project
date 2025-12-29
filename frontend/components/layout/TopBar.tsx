@@ -79,7 +79,7 @@ export default function TopBar() {
                             className="relative w-10 h-10 rounded-lg bg-card hover:bg-card-hover border border-border flex items-center justify-center transition-colors"
                         >
                             <Bell className="w-5 h-5 text-muted-foreground" />
-                            {notificationCount > 0 && (
+                            {notificationCount > 0 && !showNotifications && (
                                 <motion.span
                                     initial={{ scale: 0 }}
                                     animate={{ scale: 1 }}
@@ -168,7 +168,7 @@ export default function TopBar() {
                     </motion.button>
 
                     {/* User Menu */}
-                    <div className="relative">
+                    <div className="relative" ref={userMenuRef}>
                         <motion.button
                             whileHover={{ scale: 1.02 }}
                             whileTap={{ scale: 0.98 }}
