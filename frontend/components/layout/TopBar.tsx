@@ -98,12 +98,13 @@ export default function TopBar() {
                                     animate="open"
                                     exit="closed"
                                     variants={dropdownVariants}
-                                    className="absolute right-0 mt-2 w-80 bg-card border border-border rounded-lg shadow-2xl overflow-hidden z-[100]"
+                                    style={{ backgroundColor: 'hsl(222, 47%, 15%)' }}
+                                    className="absolute right-0 mt-2 w-80 border border-border rounded-lg shadow-2xl overflow-hidden z-[100]"
                                 >
-                                    <div className="p-4 border-b border-border bg-card">
+                                    <div className="p-4 border-b border-border" style={{ backgroundColor: 'hsl(222, 47%, 15%)' }}>
                                         <h3 className="font-semibold text-foreground">Notifications</h3>
                                     </div>
-                                    <div className="max-h-96 overflow-y-auto bg-card">
+                                    <div className="max-h-96 overflow-y-auto" style={{ backgroundColor: 'hsl(222, 47%, 15%)' }}>
                                         {[1, 2, 3].map((i) => (
                                             <motion.div
                                                 key={i}
@@ -128,11 +129,6 @@ export default function TopBar() {
                                                 </div>
                                             </motion.div>
                                         ))}
-                                    </div>
-                                    <div className="p-3 border-t border-border bg-card">
-                                        <button className="w-full text-sm text-primary hover:text-primary/80 font-medium transition-colors">
-                                            View all notifications
-                                        </button>
                                     </div>
                                 </motion.div>
                             )}
@@ -198,13 +194,14 @@ export default function TopBar() {
                                     animate="open"
                                     exit="closed"
                                     variants={dropdownVariants}
-                                    className="absolute right-0 mt-2 w-56 bg-card border border-border rounded-lg shadow-2xl overflow-hidden z-[100]"
+                                    style={{ backgroundColor: 'hsl(222, 47%, 15%)' }}
+                                    className="absolute right-0 mt-2 w-56 border border-border rounded-lg shadow-2xl overflow-hidden z-[100]"
                                 >
-                                    <div className="p-3 border-b border-border bg-card">
+                                    <div className="p-3 border-b border-border" style={{ backgroundColor: 'hsl(222, 47%, 15%)' }}>
                                         <p className="text-sm font-medium text-foreground">Admin User</p>
                                         <p className="text-xs text-muted-foreground">admin@secureguard.ai</p>
                                     </div>
-                                    <div className="p-2 bg-card">
+                                    <div className="p-2" style={{ backgroundColor: 'hsl(222, 47%, 15%)' }}>
                                         <motion.button
                                             whileHover={{ x: 4 }}
                                             className="w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-card-hover text-left transition-colors"
