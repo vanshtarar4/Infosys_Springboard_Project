@@ -10,10 +10,21 @@ export default function TopBar() {
     const { theme, toggleTheme } = useTheme()
     const [showNotifications, setShowNotifications] = useState(false)
     const [showUserMenu, setShowUserMenu] = useState(false)
-    const [notificationCount] = useState(3)
+    const [notificationCount, setNotificationCount] = useState(3)
 
     const notificationRef = useRef<HTMLDivElement>(null)
     const userMenuRef = useRef<HTMLDivElement>(null)
+
+    // Reset notification count when dropdown is opened (mark as seen)
+    useEffect(() => {
+        if (showNotifications && notificationCount > 0) {
+            // Wait a moment for the dropdown to open, then reset count
+            const timer = setTimeout(() => {
+                setNotificationCount(0)
+            }, 500)
+            return () => clearTimeout(timer)
+        }
+    }, [showNotifications, notificationCount])
 
     // Close dropdowns when clicking outside
     useEffect(() => {
