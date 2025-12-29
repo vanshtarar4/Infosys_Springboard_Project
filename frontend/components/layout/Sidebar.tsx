@@ -56,10 +56,9 @@ export default function Sidebar() {
 
     return (
         <motion.aside
-            initial="expanded"
-            animate={isCollapsed ? 'collapsed' : 'expanded'}
-            variants={sidebarVariants}
-            className="fixed left-0 top-0 h-screen border-r border-border glass z-40 flex flex-col"
+            initial={{ x: -280 }}
+            animate={{ x: 0 }}
+            className="fixed left-0 top-0 h-screen w-64 border-r border-border glass z-40 flex flex-col"
         >
             {/* Logo Section */}
             <div className="h-16 flex items-center justify-between px-4 border-b border-border">
