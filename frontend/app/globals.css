@@ -12,7 +12,7 @@
     /* ===== DARK MODE (Default) ===== */
     --background: 222 47% 11%;
     /* #0f1419 - Deep navy */
-    --foreground: 210 40% 98%;
+    --foreground: 210 40% 100%;
     /* #f8fafc - Off white */
 
     --card: 222 47% 15%;
@@ -166,6 +166,27 @@
     -moz-osx-font-smoothing: grayscale;
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
     transition: background-color 0.3s ease, color 0.3s ease;
+  }
+
+  /* Make input text visible with proper backgrounds */
+  input,
+  textarea,
+  select {
+    background-color: hsl(var(--input)) !important;
+    color: hsl(var(--foreground)) !important;
+    border: 1px solid hsl(var(--border));
+  }
+
+  input:focus,
+  textarea:focus,
+  select:focus {
+    outline: 2px solid hsl(var(--ring));
+    outline-offset: 2px;
+  }
+
+  input::placeholder,
+  textarea::placeholder {
+    color: hsl(var(--muted-foreground));
   }
 
   /* Smooth scrollbar */

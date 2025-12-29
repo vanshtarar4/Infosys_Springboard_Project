@@ -44,7 +44,7 @@ export default function TopBar() {
                                 repeat: Infinity,
                                 ease: 'easeInOut',
                             }}
-                            className="w-2 h-2 rounded-full bg-success"
+                            className="w-2 h-2 rounded-full bg-success status-live"
                         />
                         <span className="text-sm font-medium text-muted-foreground">Live</span>
                     </motion.div>
@@ -65,7 +65,7 @@ export default function TopBar() {
                                 <motion.span
                                     initial={{ scale: 0 }}
                                     animate={{ scale: 1 }}
-                                    className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-danger text-white text-xs font-bold flex items-center justify-center"
+                                    className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-danger text-white dark:text-white text-white text-xs font-bold flex items-center justify-center shadow-md"
                                 >
                                     {notificationCount}
                                 </motion.span>
@@ -165,7 +165,7 @@ export default function TopBar() {
                             className="flex items-center gap-2 px-3 py-2 rounded-lg bg-card hover:bg-card-hover border border-border transition-colors"
                         >
                             <div className="w-8 h-8 rounded-full bg-gradient-primary flex items-center justify-center">
-                                <User className="w-4 h-4 text-white" />
+                                <User className="w-4 h-4 text-primary-foreground" />
                             </div>
                             <span className="text-sm font-medium text-foreground">Admin</span>
                             <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform ${showUserMenu ? 'rotate-180' : ''
