@@ -166,6 +166,14 @@ class RuleEngine:
             # Final risk score = max of (adjusted ML score, rule risk increase)
             final_risk_score = max(adjusted_ml_score, rule_risk_increase)
             
+            # IMPORTANT: Set minimum risk floor for large transactions
+            # Even trusted customers should show SOME risk for very large amounts
+            transaction_amount = float(transaction_data.get('transaction_amount', 0))
+            if transaction_amount > 50000:
+                final_risk_score = max(final_risk_score, 0.05)  # Minimum 5% for amounts > $50k
+            elif transaction_amount > 20000:
+                final_risk_score = max(final_risk_score, 0.03)  # Minimum 3% for amounts > $20k
+            
             # Final decision: Fraud if ANY high-priority rule triggers OR ML predicts fraud (after adjustments)
             high_priority_rules = [r for r in triggered_rules if r['risk_contribution'] > 0.5]
             final_prediction = "Fraud" if (high_priority_rules or ml_prediction_result == "Fraud") else "Legitimate"
@@ -365,8 +373,9 @@ class RuleEngine:
         account_age_days = float(transaction_data.get('account_age_days', 0))
         
         # Established customer: KYC verified + account age > 1 year
+        # Reduced from -20% to -10% to ensure some risk still shows
         if kyc_verified == 1 and account_age_days >= 365:
-            return True, -0.20  # Negative = reduces risk by 20%
+            return True, -0.10  # Negative = reduces risk by 10%
         
         return False, 0.0
     
