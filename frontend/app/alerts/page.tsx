@@ -44,6 +44,7 @@ export default function AlertsPage() {
 
         try {
             const params = new URLSearchParams()
+            params.append('limit', '200')  // Increase from default 50 to 200
             if (filter.severity) params.append('severity', filter.severity)
             if (filter.status) params.append('status', filter.status)
 
@@ -125,7 +126,7 @@ export default function AlertsPage() {
                 initial={{ opacity: 0, y: -20 }}
                 animate={{ opacity: 1, y: 0 }}
             >
-                
+
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-4">
                         <div className="w-12 h-12 rounded-xl bg-danger/10 flex items-center justify-center">
@@ -334,9 +335,9 @@ export default function AlertsPage() {
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap">
                                                 <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${alert.status === 'NEW' ? 'bg-danger/10 text-danger' :
-                                                        alert.status === 'INVESTIGATING' ? 'bg-warning/10 text-warning' :
-                                                            alert.status === 'RESOLVED' ? 'bg-success/10 text-success' :
-                                                                'bg-muted/10 text-muted-foreground'
+                                                    alert.status === 'INVESTIGATING' ? 'bg-warning/10 text-warning' :
+                                                        alert.status === 'RESOLVED' ? 'bg-success/10 text-success' :
+                                                            'bg-muted/10 text-muted-foreground'
                                                     }`}>
                                                     {alert.status.replace('_', ' ')}
                                                 </span>
