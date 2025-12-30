@@ -725,6 +725,134 @@ def get_metrics():
         }), 500
 
 
+@app.route('/api/auth/login', methods=['POST'])
+def login():
+    """
+    Mock authentication endpoint for demo/testing.
+    
+    Request JSON:
+    {
+        "username": "admin",
+        "password": "admin123"
+    }
+    
+    Response:
+    {
+        "success": true,
+        "token": "mock_jwt_token_...",
+        "user": {
+            "username": "admin",
+            "role": "admin"
+        }
+    }
+    """
+    try:
+        data = request.get_json()
+        
+        if not data:
+            return jsonify({
+                'success': False,
+                'error': 'No data provided'
+            }), 400
+        
+        username = data.get('username', '').strip()
+        password = data.get('password', '')
+        
+        # Mock credentials (hardcoded for demo)
+        MOCK_USERS = {
+            'admin': {'password': 'admin123', 'role': 'admin'},
+            'analyst': {'password': 'analyst123', 'role': 'analyst'},
+            'viewer': {'password': 'viewer123', 'role': 'viewer'}
+        }
+        
+        # Validate username and password
+        if not username or not password:
+            return jsonify({
+                'success': False,
+                'error': 'Username and password are required'
+            }), 400
+        
+        # Check credentials
+        if username not in MOCK_USERS:
+            return jsonify({
+                'success': False,
+                'error': 'Invalid username or password'
+            }), 401
+        
+        if MOCK_USERS[username]['password'] != password:
+            return jsonify({
+                'success': False,
+                'error': 'Invalid username or password'
+            }), 401
+        
+        # Generate mock token (in production, use JWT)
+        import hashlib
+        import time
+        token_string = f"{username}:{time.time()}:secret"
+        mock_token = hashlib.sha256(token_string.encode()).hexdigest()
+        
+        # Successful login
+        return jsonify({
+            'success': True,
+            'token': f"Bearer {mock_token}",
+            'user': {
+                'username': username,
+                'role': MOCK_USERS[username]['role']
+            },
+            'message': 'Login successful'
+        })
+    
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': 'Login failed. Please try again.'
+        }), 500
+
+
+@app.route('/api/dashboard/stats', methods=['GET'])
+def get_dashboard_stats():
+    """
+    Get dashboard statistics (alias for /api/metrics).
+    
+    Returns:
+        - total_transactions: total number of transactions
+        - fraud_count: number of fraudulent transactions
+        - legit_count: number of legitimate transactions
+        - fraud_percentage: percentage of fraudulent transactions
+    """
+    try:
+        with TransactionDB(DB_PATH) as db:
+            # Total transactions
+            total_query = "SELECT COUNT(*) as total FROM transactions"
+            total_result = db.query_transactions(total_query)
+            total_transactions = int(total_result.iloc[0]['total'])
+            
+            # Fraud count
+            fraud_query = "SELECT COUNT(*) as fraud_count FROM transactions WHERE is_fraud = 1"
+            fraud_result = db.query_transactions(fraud_query)
+            fraud_count = int(fraud_result.iloc[0]['fraud_count'])
+            
+            # Calculate legit count and fraud percentage
+            legit_count = total_transactions - fraud_count
+            fraud_percentage = (fraud_count / total_transactions * 100) if total_transactions > 0 else 0
+            
+            return jsonify({
+                'success': True,
+                'stats': {
+                    'total_transactions': total_transactions,
+                    'fraud_count': fraud_count,
+                    'legit_count': legit_count,
+                    'fraud_percentage': round(fraud_percentage, 2)
+                }
+            })
+    
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+
 @app.route('/api/download/processed', methods=['GET'])
 def download_processed():
     """
@@ -772,14 +900,22 @@ def index():
         'service': 'Transaction Intelligence API',
         'version': '2.0.0',
         'endpoints': {
+            'POST /api/predict': 'Predict fraud for a transaction (ML + Rules + LLM)',
+            'POST /api/auth/login': 'Mock authentication (username: admin, password: admin123)',
+            'GET /api/alerts': 'Get fraud alerts (params: limit, severity, status)',
+            'GET /api/metrics': 'Get transaction statistics',
+            'GET /api/dashboard/stats': 'Get dashboard statistics (total, fraud, legit counts)',
+            'GET /api/model/metrics': 'Get model performance metrics (accuracy, precision, recall, F1, AUC)',
             'GET /api/transactions': 'Get paginated transactions (params: limit, offset)',
             'GET /api/transactions/sample': 'Get sample transactions preview',
-            'GET /api/metrics': 'Get transaction metrics and statistics',
-            'GET /api/model/metrics': 'Get model performance metrics',
-            'GET /api/download/processed': 'Download full processed CSV',
-            'POST /api/predict': 'Predict fraud for a transaction',
             'GET /api/predictions/history': 'Get prediction history',
+            'GET /api/download/processed': 'Download full processed CSV',
             'GET /api/health': 'Health check endpoint'
+        },
+        'mock_credentials': {
+            'admin': 'admin123',
+            'analyst': 'analyst123',
+            'viewer': 'viewer123'
         }
     })
 
