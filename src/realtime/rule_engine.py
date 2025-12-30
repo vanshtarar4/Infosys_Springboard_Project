@@ -47,6 +47,12 @@ class RuleEngine:
         # Define rules with priority (higher = more important)
         self.rules = [
             {
+                'name': 'high_amount_unverified_kyc',
+                'priority': 6,
+                'func': self.check_high_amount_unverified,
+                'reason': 'High transaction amount without KYC verification'
+            },
+            {
                 'name': 'new_account_high_amount',
                 'priority': 5,
                 'func': self.check_new_account_high_amount,
@@ -277,6 +283,30 @@ class RuleEngine:
                 
         except Exception as e:
             logger.error(f"Error parsing timestamp: {e}")
+        
+        return False, 0.0
+    
+    
+    def check_high_amount_unverified(self, transaction_data: Dict) -> Tuple[bool, float]:
+        """
+        Rule 0: Critical risk - High transaction amount without KYC verification.
+        This is a major red flag for money laundering or fraud.
+        
+        Args:
+            transaction_data: Current transaction
+            
+        Returns:
+            (triggered, risk_contribution)
+        """
+        transaction_amount = float(transaction_data.get('transaction_amount', 0))
+        kyc_verified = int(transaction_data.get('kyc_verified', 0))
+        
+        # Critical: High amounts (>$50k) require KYC verification
+        if kyc_verified == 0:
+            if transaction_amount > 50000:
+                return True, 0.70  # 70% risk - very suspicious
+            elif transaction_amount > 20000:
+                return True, 0.55  # 55% risk - suspicious
         
         return False, 0.0
     
