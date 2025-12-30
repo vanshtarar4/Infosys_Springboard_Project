@@ -4,10 +4,12 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Bell, Sun, Moon, User, LogOut, ChevronDown } from 'lucide-react'
 import { useState, useEffect, useRef } from 'react'
 import { useTheme } from '@/contexts/ThemeContext'
+import { useAuth } from '@/contexts/AuthContext'
 import { dropdownVariants } from '@/utils/animations'
 
 export default function TopBar() {
     const { theme, toggleTheme } = useTheme()
+    const { user, logout } = useAuth()
     const [showNotifications, setShowNotifications] = useState(false)
     const [showUserMenu, setShowUserMenu] = useState(false)
     const [notificationCount, setNotificationCount] = useState(0)
@@ -202,11 +204,11 @@ export default function TopBar() {
                                     }}
                                     className="absolute right-0 mt-2 w-56 border border-border rounded-lg shadow-2xl overflow-hidden z-[100]"
                                 >
-                                    <div className="p-3 border-b border-border" style={{
+                                    <div className="px-4 py-3 border-b border-border" style={{
                                         backgroundColor: theme === 'dark' ? 'hsl(222, 47%, 15%)' : 'hsl(210, 40%, 98%)'
                                     }}>
-                                        <p className="text-sm font-medium text-foreground">Admin User</p>
-                                        <p className="text-xs text-muted-foreground">admin@secureguard.ai</p>
+                                        <p className="text-sm font-semibold text-foreground capitalize">{user?.username || 'User'}</p>
+                                        <p className="text-xs text-muted-foreground capitalize">{user?.role || 'Role'}</p>
                                     </div>
                                     <div className="p-2" style={{
                                         backgroundColor: theme === 'dark' ? 'hsl(222, 47%, 15%)' : 'hsl(210, 40%, 98%)'
@@ -220,10 +222,14 @@ export default function TopBar() {
                                         </motion.button>
                                         <motion.button
                                             whileHover={{ x: 4 }}
-                                            className="w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-card-hover text-left transition-colors text-danger"
+                                            onClick={() => {
+                                                logout()
+                                                setShowUserMenu(false)
+                                            }}
+                                            className="w-full flex items-center gap-3 px-4 py-2.5 text-danger hover:bg-danger/10 transition-colors"
                                         >
                                             <LogOut className="w-4 h-4" />
-                                            <span className="text-sm">Logout</span>
+                                            <span className="text-sm font-medium">Logout</span>
                                         </motion.button>
                                     </div>
                                 </motion.div>
