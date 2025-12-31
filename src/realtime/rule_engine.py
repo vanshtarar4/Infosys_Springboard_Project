@@ -292,6 +292,8 @@ class RuleEngine:
         Rule 0: Critical risk - High transaction amount without KYC verification.
         This is a major red flag for money laundering or fraud.
         
+        Regulatory note: Most financial institutions require KYC for amounts > $5k-$10k
+        
         Args:
             transaction_data: Current transaction
             
@@ -301,12 +303,13 @@ class RuleEngine:
         transaction_amount = float(transaction_data.get('transaction_amount', 0))
         kyc_verified = int(transaction_data.get('kyc_verified', 0))
         
-        # Critical: High amounts (>$50k) require KYC verification
+        # Critical: High amounts require KYC verification
+        # Lowered thresholds based on actual fraud patterns and regulations
         if kyc_verified == 0:
-            if transaction_amount > 50000:
-                return True, 0.70  # 70% risk - very suspicious
-            elif transaction_amount > 20000:
-                return True, 0.55  # 55% risk - suspicious
+            if transaction_amount > 10000:
+                return True, 0.80  # 80% risk - very high suspicious
+            elif transaction_amount > 5000:
+                return True, 0.65  # 65% risk - high suspicious  
         
         return False, 0.0
     
