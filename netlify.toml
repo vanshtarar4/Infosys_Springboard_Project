@@ -3,7 +3,7 @@
 
 [build]
   base = "frontend"
-  command = "npm install && npm run build"
+  command = "npm install --production=false && npm run build"
   # No publish directory - Netlify auto-detects Next.js output
 
 [build.environment]
