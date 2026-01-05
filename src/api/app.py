@@ -39,9 +39,9 @@ from src.api.feedback_routes import feedback_bp
 app = Flask(__name__)
 app.json = CustomJSONProvider(app)
 
-# Enable CORS for development (wide-open)
+# Enable CORS for production (allow Netlify + localhost)
 CORS(app, resources={r"/api/*": {
-    "origins": ["https://your-netlify-site.netlify.app"]
+    "origins": "*"  # TODO: Update with actual Netlify URL after deployment
 }})
 
 # Register feedback routes blueprint
