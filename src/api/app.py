@@ -40,7 +40,9 @@ app = Flask(__name__)
 app.json = CustomJSONProvider(app)
 
 # Enable CORS for development (wide-open)
-CORS(app, resources={r"/api/*": {"origins": "*"}})
+CORS(app, resources={r"/api/*": {
+    "origins": ["https://your-netlify-site.netlify.app"]
+}})
 
 # Register feedback routes blueprint
 app.register_blueprint(feedback_bp)

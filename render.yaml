@@ -1,0 +1,47 @@
+# Render Configuration for Backend Deployment
+# Backend: Flask API + ML Models
+
+services:
+  # Backend API Service
+  - type: web
+    name: fraud-detection-api
+    env: python
+    region: oregon
+    plan: free
+    branch: main
+    
+    # Build command
+    buildCommand: "pip install -r requirements.txt"
+    
+    # Start command
+    startCommand: "python src/api/app.py"
+    
+    # Health check endpoint
+    healthCheckPath: /api/health
+    
+    # Environment variables
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11
+      
+      - key: FLASK_ENV
+        value: production
+      
+      - key: PORT
+        value: 8001
+      
+      # Add your Gemini API key in Render dashboard
+      - key: GEMINI_API_KEY
+        sync: false  # Set manually in Render UI
+      
+      - key: DATABASE_PATH
+        value: data/transactions.db
+    
+    # Disk storage for database and models
+    disk:
+      name: fraud-data
+      mountPath: /opt/render/project/src/data
+      sizeGB: 1
+    
+    # Auto-deploy on push
+    autoDeploy: true

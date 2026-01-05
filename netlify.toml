@@ -1,0 +1,44 @@
+# Netlify Configuration for Frontend Deployment
+# Frontend: Next.js App
+
+[build]
+  # Build command for Next.js
+  command = "cd frontend && npm install && npm run build"
+  
+  # Output directory after build
+  publish = "frontend/.next"
+  
+  # Base directory
+  base = "/"
+
+[build.environment]
+  # Node.js version
+  NODE_VERSION = "18"
+  
+  # Next.js configuration
+  NEXT_TELEMETRY_DISABLED = "1"
+
+# Environment variables (set in Netlify UI)
+# NEXT_PUBLIC_API_URL = "https://your-backend-url.onrender.com"
+
+# Redirect all API calls to backend
+[[redirects]]
+  from = "/api/*"
+  to = "https://your-backend-url.onrender.com/api/:splat"
+  status = 200
+  force = true
+
+# Redirect all server routes to index.html for SPA
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+# Headers for security
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-Content-Type-Options = "nosniff"
+    X-XSS-Protection = "1; mode=block"
+    Referrer-Policy = "strict-origin-when-cross-origin"
