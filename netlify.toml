@@ -3,7 +3,7 @@
 
 [build]
   # Build command for Next.js
-  command = "cd frontend && npm install && npm run build"
+  command = "cd frontend && npm install --production=false && npm run build"
   
   # Output directory after build
   publish = "frontend/.next"
