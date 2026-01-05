@@ -5,11 +5,11 @@
   # Build command for Next.js
   command = "cd frontend && npm install --production=false && npm run build"
   
-  # Output directory after build
-  publish = "frontend/.next"
+  # Base directory for the build
+  base = "frontend"
   
-  # Base directory
-  base = "/"
+  # Output directory after build (Next.js standalone)
+  publish = ".next"
 
 [build.environment]
   # Node.js version (Next.js 16 requires >= 20.9.0)
@@ -19,12 +19,12 @@
   NEXT_TELEMETRY_DISABLED = "1"
 
 # Environment variables (set in Netlify UI)
-# NEXT_PUBLIC_API_URL = "https://your-backend-url.onrender.com"
+# NEXT_PUBLIC_API_URL = "https://infosys-springboard-project.onrender.com"
 
-# Redirect all API calls to backend
+# Redirect all API calls to backend on Render
 [[redirects]]
   from = "/api/*"
-  to = "https://your-backend-url.onrender.com/api/:splat"
+  to = "https://infosys-springboard-project.onrender.com/api/:splat"
   status = 200
   force = true
 
