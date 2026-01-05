@@ -29,9 +29,9 @@ rules = [
 print("\nGenerating 20 fresh alerts...")
 
 for i in range(1, 21):
-    # Random timestamps in the last 2 hours
+    # Random timestamps in the last 2 hours (LOCAL TIME)
     minutes_ago = random.randint(1, 120)
-    timestamp = datetime.utcnow() - timedelta(minutes=minutes_ago)
+    timestamp = datetime.now() - timedelta(minutes=minutes_ago)  # Changed from utcnow() to now()
     
     # Random data
     customer = random.choice(customers)
