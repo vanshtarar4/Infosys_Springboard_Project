@@ -2,8 +2,8 @@
 # Frontend: Next.js App
 
 [build]
-  # Build command for Next.js
-  command = "cd frontend && npm install --production=false && npm run build"
+  # Build command for Next.js (base dir is already 'frontend')
+  command = "npm install --production=false && npm run build"
   
   # Base directory for the build
   base = "frontend"
