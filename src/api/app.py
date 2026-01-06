@@ -58,6 +58,15 @@ DB_PATH = 'data/transactions.db'
 PROCESSED_CSV = 'data/processed/transactions_processed.csv'
 PREVIEW_CSV = 'data/processed/transactions_preview.csv'
 MODEL_PATH = 'models/best_model.joblib'
+
+# Initialize database on first run
+try:
+    from init_db import init_database
+    init_database()
+    print("✅ Database initialized successfully")
+except Exception as e:
+    print(f"⚠️  Database initialization warning: {e}")
+    print("Continuing anyway...")
 SCALER_PATH = 'models/scaler.joblib'
 ENCODER_PATH = 'models/encoder.joblib'
 THRESHOLD_PATH = 'configs/model_threshold.json'
