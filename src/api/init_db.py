@@ -82,11 +82,17 @@ def init_database():
         )
     ''')
     
-    # Check if we need to load data
+    # Check if we need to load data  
     cursor.execute('SELECT COUNT(*) FROM transactions')
     existing_count = cursor.fetchone()[0]
     
-    if existing_count == 0:
+    # CRITICAL FIX: Skip CSV reload if database already has data
+    # This preserves user-added transactions from Fraud Lab across restarts!
+    if existing_count > 0:
+        print(f"✅ Database already contains {existing_count} transactions")
+        print("   Skipping CSV reload to preserve existing data (including user-added transactions)")
+    else:
+        # Only load CSV on FIRST initialization when database is completely empty
         # Try to load from CSV first
         csv_path = 'data/processed/transactions_processed.csv'
         if os.path.exists(csv_path):
@@ -138,8 +144,6 @@ def init_database():
         else:
             print(f"📝 CSV not found at {csv_path}, loading sample data...")
             _load_sample_data(cursor)
-    else:
-        print(f"✅ Database already contains {existing_count} transactions")
     
     conn.commit()
     conn.close()
