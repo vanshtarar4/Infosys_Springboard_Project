@@ -26,7 +26,7 @@ interface Metrics {
   avg_amount_legit: number
 }
 
-const API_BASE_URL = 'http://localhost:8001'
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8001'
 
 export default function Dashboard() {
   const [metrics, setMetrics] = useState<Metrics | null>(null)
