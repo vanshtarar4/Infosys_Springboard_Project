@@ -37,9 +37,10 @@ export default function FeedbackWidget({
             console.log('Transaction ID:', transactionId);
             console.log('Actual Label:', actualLabel);
             console.log('Request Body:', JSON.stringify(requestBody, null, 2));
-            console.log('API URL:', 'http://localhost:8001/api/feedback');
+            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8001';
+            console.log('API URL:', `${apiUrl}/api/feedback`);
 
-            const response = await fetch('http://localhost:8001/api/feedback', {
+            const response = await fetch(`${apiUrl}/api/feedback`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
