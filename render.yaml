@@ -10,10 +10,10 @@ services:
     plan: free
     branch: main
     
-    # Build command
-    buildCommand: "pip install -r requirements.txt"
+    # Build command - install dependencies and initialize database
+    buildCommand: "pip install -r requirements.txt && python src/setup_database.py"
     
-    # Start command
+    # Start command  
     startCommand: "python src/api/app.py"
     
     # Health check endpoint
@@ -22,7 +22,7 @@ services:
     # Environment variables
     envVars:
       - key: PYTHON_VERSION
-        value: 3.11
+        value: 3.11.0
       
       - key: FLASK_ENV
         value: production
