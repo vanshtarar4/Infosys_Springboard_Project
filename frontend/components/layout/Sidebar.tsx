@@ -31,8 +31,8 @@ const navItems = [
     { href: '/upload', icon: Upload, label: 'Upload' },
 ]
 
-const bottomNavItems = [
-    { href: '/settings', icon: Settings, label: 'Settings' },
+const bottomNavItems: typeof navItems = [
+    // Settings page not implemented - removed to avoid console 404 errors
 ]
 
 export default function Sidebar() {
