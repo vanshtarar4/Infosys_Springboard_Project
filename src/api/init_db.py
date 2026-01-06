@@ -22,11 +22,12 @@ def init_database():
         CREATE TABLE IF NOT EXISTS transactions (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             transaction_id TEXT UNIQUE NOT NULL,
-            amount REAL NOT NULL,
+            transaction_amount REAL NOT NULL,
             timestamp TEXT NOT NULL,
             merchant_category TEXT,
             device_id TEXT,
             location TEXT,
+            is_fraud INTEGER DEFAULT 0,
             kyc_verified INTEGER DEFAULT 0,
             is_high_value INTEGER DEFAULT 0,
             velocity_1h INTEGER DEFAULT 0,
@@ -84,16 +85,16 @@ def init_database():
     if cursor.fetchone()[0] == 0:
         print("📝 Adding sample transaction data...")
         sample_transactions = [
-            ('TXN_001', 50.00, '2024-01-01 10:00:00', 'Retail', 'DEV001', 'New York', 1, 0, 0, 0, 0, 'USER001'),
-            ('TXN_002', 15000.00, '2024-01-01 11:00:00', 'Electronics', 'DEV002', 'Los Angeles', 0, 1, 1, 5, 5000, 'USER002'),
-            ('TXN_003', 100.00, '2024-01-01 12:00:00', 'Food', 'DEV003', 'Chicago', 1, 0, 0, 0, 0, 'USER003'),
+            ('TXN_001', 50.00, '2024-01-01 10:00:00', 'Retail', 'DEV001', 'New York', 0, 1, 0, 0, 0, 0, 'USER001'),
+            ('TXN_002', 15000.00, '2024-01-01 11:00:00', 'Electronics', 'DEV002', 'Los Angeles', 1, 0, 1, 1, 5, 5000, 'USER002'),
+            ('TXN_003', 100.00, '2024-01-01 12:00:00', 'Food', 'DEV003', 'Chicago', 0, 1, 0, 0, 0, 0, 'USER003'),
         ]
         
         cursor.executemany('''
             INSERT INTO transactions 
-            (transaction_id, amount, timestamp, merchant_category, device_id, location, 
-             kyc_verified, is_high_value, velocity_1h, velocity_24h, avg_amt_24h, user_id)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            (transaction_id, transaction_amount, timestamp, merchant_category, device_id, location, 
+             is_fraud, kyc_verified, is_high_value, velocity_1h, velocity_24h, avg_amt_24h, user_id)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ''', sample_transactions)
     
     conn.commit()
