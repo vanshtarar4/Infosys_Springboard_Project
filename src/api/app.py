@@ -39,9 +39,12 @@ from src.api.feedback_routes import feedback_bp
 app = Flask(__name__)
 app.json = CustomJSONProvider(app)
 
-# Enable CORS for production (allow Netlify + localhost)
+# Enable CORS for production (allow Vercel frontend)
 CORS(app, resources={r"/api/*": {
-    "origins": "*"  # TODO: Update with actual Netlify URL after deployment
+    "origins": [
+        "https://infosys-springboard-project.vercel.app",
+        "http://localhost:3000"  # For local development
+    ]
 }})
 
 # Register feedback routes blueprint
