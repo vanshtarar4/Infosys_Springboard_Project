@@ -354,7 +354,7 @@ class RuleEngine:
             cursor.execute('''
                 SELECT AVG(transaction_amount)
                 FROM transactions
-                WHERE customer_id = ?
+                WHERE user_id = ?
                 AND is_fraud = 0
                 LIMIT 100
             ''', (customer_id,))
@@ -436,7 +436,7 @@ class RuleEngine:
             cursor.execute('''
                 SELECT COUNT(*) as total, SUM(is_fraud) as fraud_count
                 FROM transactions
-                WHERE customer_id = ?
+                WHERE user_id = ?
             ''', (customer_id,))
             
             result = cursor.fetchone()
