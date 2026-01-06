@@ -76,36 +76,27 @@ def submit_feedback():
         
         logger.info(f"Transaction found - User: {user_id}, Predicted: {predicted_label}")
         
-        # Insert feedback
+        # Insert feedback (table name is 'feedback', not 'transaction_feedback')
         cursor.execute('''
-            INSERT INTO transaction_feedback (
+            INSERT INTO feedback (
                 transaction_id,
-                customer_id,
                 predicted_label,
                 actual_label,
-                notes,
-                feedback_source
-            ) VALUES (?, ?, ?, ?, ?, ?)
+                notes
+            ) VALUES (?, ?, ?, ?)
         ''', (
             data['transaction_id'],
-            customer_id,
             predicted_label,
             data['actual_label'],
-            data.get('notes', ''),
-            data.get('feedback_source', 'user')
+            data.get('notes', '')
         ))
         
         feedback_id = cursor.lastrowid
         logger.info(f"Feedback inserted with ID: {feedback_id}")
         
-        # Update transaction with feedback
-        cursor.execute('''
-            UPDATE transactions 
-            SET feedback_confirmed = 1,
-                confirmed_label = ?,
-                feedback_timestamp = CURRENT_TIMESTAMP
-            WHERE transaction_id = ?
-        ''', (data['actual_label'], data['transaction_id']))
+        # Note: transactions table doesn't have feedback columns
+        # Feedback is stored in separate feedback table
+        # No UPDATE needed - feedback table has foreign key relationship
         
         conn.commit()
         conn.close()
