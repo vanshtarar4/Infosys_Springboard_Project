@@ -39,12 +39,15 @@ from src.api.feedback_routes import feedback_bp
 app = Flask(__name__)
 app.json = CustomJSONProvider(app)
 
-# Enable CORS for production (allow Vercel frontend)
+# Enable CORS for production (allow Vercel frontend - all deployments)
 CORS(app, resources={r"/api/*": {
     "origins": [
         "https://infosys-springboard-project.vercel.app",
+        "https://infosys-springboard-project-gzurv499z-vansh-tarars-projects.vercel.app",
         "http://localhost:3000"  # For local development
-    ]
+    ],
+    "supports_credentials": True,
+    "allow_headers": ["Content-Type", "Authorization"]
 }})
 
 # Register feedback routes blueprint
