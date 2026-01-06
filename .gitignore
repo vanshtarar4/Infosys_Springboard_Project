@@ -36,20 +36,22 @@ out/
 *.swo
 .DS_Store
 
-# Database (don't upload real data!)
-*.db
+# Database (don't upload raw data!)
 *.sqlite
 *.sqlite3
+# Block raw database but allow production data loading from CSV
 data/transactions.db
-data/*.csv
+# Allow processed CSV for production deployment (synthetic data)
+!data/processed/transactions_processed.csv
 
-# Model files (too large for GitHub)
-models/*.joblib
+# Model files - allow deployment files, block training artifacts
 models/*.pkl
 models/*.npy
 models/*.h5
 models/X_*.npy
 models/y_*.npy
+# Allow trained model files for production
+!models/*.joblib
 
 # Keep only small metadata files
 !models/evaluation_metrics.json
