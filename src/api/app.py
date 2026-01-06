@@ -377,26 +377,26 @@ def predict_fraud():
             print("[DEBUG] Database connection established")
             
             # Store transaction with prediction
-            # Note: Using 'timestamp' column name (not 'transaction_timestamp')
+            # Note: Using 'user_id' column (not 'customer_id') and 'timestamp' column
             cursor.execute('''
                 INSERT INTO transactions (
                     transaction_id,
-                    customer_id,
+                    user_id,
                     transaction_amount,
                     timestamp,
-                    channel,
-                    kyc_verified,
-                    account_age_days,
+                    merchant_category,
+                    device_id,
+                    location,
                     is_fraud
                 ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
             ''', (
                 transaction_id,
-                data['customer_id'],
+                data.get('customer_id', 'UNKNOWN_USER'),  # Map customer_id to user_id
                 data['transaction_amount'],
                 data.get('timestamp', datetime.now().isoformat()),
-                data.get('channel', 'Unknown'),
-                int(data.get('kyc_verified', 0)),
-                int(data.get('account_age_days', 0)),
+                data.get('merchant_category', 'Unknown'),
+                data.get('device_id', 'Unknown'),
+                data.get('location', 'Unknown'),
                 1 if final_prediction == 'Fraud' else 0
             ))
             
