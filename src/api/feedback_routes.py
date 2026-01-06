@@ -59,7 +59,7 @@ def submit_feedback():
         cursor = conn.cursor()
         
         cursor.execute('''
-            SELECT customer_id, transaction_amount, is_fraud 
+            SELECT user_id, transaction_amount, is_fraud 
             FROM transactions 
             WHERE transaction_id = ?
         ''', (data['transaction_id'],))
@@ -71,10 +71,10 @@ def submit_feedback():
             conn.close()
             return jsonify({'error': 'Transaction not found'}), 404
         
-        customer_id = transaction[0]
+        user_id = transaction[0]
         predicted_label = 'Fraud' if transaction[2] == 1 else 'Legitimate'
         
-        logger.info(f"Transaction found - Customer: {customer_id}, Predicted: {predicted_label}")
+        logger.info(f"Transaction found - User: {user_id}, Predicted: {predicted_label}")
         
         # Insert feedback
         cursor.execute('''
