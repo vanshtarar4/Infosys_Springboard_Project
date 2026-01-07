@@ -133,13 +133,13 @@ def feedback_stats():
         cursor = conn.cursor()
         
         # Total feedback count
-        cursor.execute('SELECT COUNT(*) FROM transaction_feedback')
+        cursor.execute('SELECT COUNT(*) FROM feedback')
         total_feedback = cursor.fetchone()[0]
         
         # Feedback by label
         cursor.execute('''
             SELECT actual_label, COUNT(*) 
-            FROM transaction_feedback 
+            FROM feedback 
             GROUP BY actual_label
         ''')
         by_label = dict(cursor.fetchall())
@@ -149,7 +149,7 @@ def feedback_stats():
             SELECT 
                 COUNT(*) as total,
                 SUM(CASE WHEN predicted_label = actual_label THEN 1 ELSE 0 END) as correct
-            FROM transaction_feedback
+            FROM feedback
         ''')
         accuracy_data = cursor.fetchone()
         accuracy = (accuracy_data[1] / accuracy_data[0] * 100) if accuracy_data[0] > 0 else 0
@@ -157,16 +157,15 @@ def feedback_stats():
         # Recent feedback (last 7 days)
         cursor.execute('''
             SELECT COUNT(*) 
-            FROM transaction_feedback 
-            WHERE feedback_timestamp >= datetime('now', '-7 days')
+            FROM feedback 
+            WHERE created_at >= datetime('now', '-7 days')
         ''')
         recent_count = cursor.fetchone()[0]
         
-        # Labeled data ready for training
+        # Labeled data ready for training (count feedback records)
         cursor.execute('''
             SELECT COUNT(*) 
-            FROM transactions 
-            WHERE feedback_confirmed = 1
+            FROM feedback
         ''')
         training_ready = cursor.fetchone()[0]
         
@@ -205,15 +204,15 @@ def recent_feedback():
         
         cursor.execute('''
             SELECT 
-                f.feedback_id,
+                f.id as feedback_id,
                 f.transaction_id,
-                f.customer_id,
+                t.user_id,
                 f.predicted_label,
                 f.actual_label,
-                f.feedback_timestamp,
+                f.created_at,
                 f.notes,
                 t.transaction_amount
-            FROM transaction_feedback f
+            FROM feedback f
             LEFT JOIN transactions t ON f.transaction_id = t.transaction_id
             ORDER BY f.feedback_timestamp DESC
             LIMIT ?
