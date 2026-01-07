@@ -102,7 +102,7 @@ def init_database():
                 df = pd.read_csv(csv_path)
                 
                 # Map CSV columns to database columns
-                # Adjust these mappings based on your actual CSV structure
+                # CRITICAL: CSV has 'customer_id' but DB schema uses 'user_id'
                 if 'TransactionID' in df.columns:
                     df = df.rename(columns={
                         'TransactionID': 'transaction_id',
@@ -119,6 +119,10 @@ def init_database():
                         'AvgAmount24H': 'avg_amt_24h',
                         'UserID': 'user_id'
                     })
+                
+                # Handle lowercase column names from CSV (customer_id → user_id)
+                if 'customer_id' in df.columns and 'user_id' not in df.columns:
+                    df = df.rename(columns={'customer_id': 'user_id'})
                 
                 # Select only the columns we need
                 columns_to_insert = [
