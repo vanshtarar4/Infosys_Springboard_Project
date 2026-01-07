@@ -10,8 +10,9 @@ services:
     plan: free
     branch: main
     
-    # Build command - install dependencies and initialize database
-    buildCommand: "pip install -r requirements.txt && python src/setup_database.py"
+    # Build command - install dependencies only
+    # Database initialization moved to app startup (after disk mount)
+    buildCommand: "pip install -r requirements.txt"
     
     # Start command  
     startCommand: "python src/api/app.py"
