@@ -63,7 +63,7 @@ export default function Sidebar() {
             style={{
                 backgroundColor: theme === 'dark' ? 'hsl(222, 47%, 15%)' : 'hsl(210, 40%, 96%)'
             }}
-            className="fixed left-0 top-0 h-screen w-64 border-r border-border z-40 flex flex-col"
+            className={`fixed left-0 top-0 h-screen ${isCollapsed ? 'w-16' : 'w-64'} border-r border-border z-40 flex flex-col transition-all duration-300 ease-in-out`}
         >
             {/* Logo Section */}
             <div className="h-16 flex items-center justify-between px-4 border-b border-border">

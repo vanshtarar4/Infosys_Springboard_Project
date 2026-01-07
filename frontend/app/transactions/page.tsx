@@ -18,15 +18,16 @@ import { formatCurrency, formatRelativeTime } from '@/utils/helpers'
 
 interface Transaction {
     transaction_id: string
-    customer_id: string
+    user_id?: string  // API uses user_id
+    customer_id?: string  // Fallback for backwards compatibility
     kyc_verified: number
-    account_age_days: number
+    account_age_days?: number
     transaction_amount: number
-    channel: string
+    channel?: string  // Made optional since it might not always exist
     timestamp: string
     is_fraud: number
     is_high_value: number
-    account_age_bucket: string
+    account_age_bucket?: string  // Made optional
 }
 
 interface PaginationInfo {
@@ -78,7 +79,8 @@ export default function TransactionsPage() {
     // Filter transactions based on search
     const filteredTransactions = transactions.filter(txn =>
         txn.transaction_id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        txn.customer_id.toLowerCase().includes(searchTerm.toLowerCase())
+        txn.user_id?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        txn.customer_id?.toLowerCase().includes(searchTerm.toLowerCase())
     )
 
     const columns = [
@@ -100,7 +102,7 @@ export default function TransactionsPage() {
             render: (txn: Transaction) => (
                 <div className="flex items-center gap-2">
                     <User className="w-4 h-4 text-muted-foreground" />
-                    <span className="text-sm text-foreground">{txn.customer_id}</span>
+                    <span className="text-sm text-foreground">{txn.user_id || txn.customer_id || 'N/A'}</span>
                 </div>
             )
         },
@@ -123,7 +125,7 @@ export default function TransactionsPage() {
             sortable: true,
             render: (txn: Transaction) => (
                 <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-secondary/10 text-secondary border border-secondary/20">
-                    {txn.channel}
+                    {txn.channel || 'N/A'}
                 </span>
             )
         },
@@ -150,7 +152,7 @@ export default function TransactionsPage() {
             sortable: true,
             render: (txn: Transaction) => (
                 <span className="text-sm text-muted-foreground capitalize">
-                    {txn.account_age_bucket}
+                    {txn.account_age_bucket || (txn.account_age_days ? `${txn.account_age_days}d` : 'N/A')}
                 </span>
             )
         },
