@@ -36,6 +36,9 @@ def init_database():
             velocity_24h INTEGER DEFAULT 0,
             avg_amt_24h REAL DEFAULT 0,
             user_id TEXT,
+            channel TEXT,
+            account_age_days INTEGER,
+            account_age_bucket TEXT,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     ''')
@@ -129,7 +132,8 @@ def init_database():
                     'transaction_id', 'transaction_amount', 'timestamp',
                     'merchant_category', 'device_id', 'location', 'is_fraud',
                     'kyc_verified', 'is_high_value', 'velocity_1h',
-                    'velocity_24h', 'avg_amt_24h', 'user_id'
+                    'velocity_24h', 'avg_amt_24h', 'user_id', 'channel',
+                    'account_age_days', 'account_age_bucket'
                 ]
                 
                 # Filter to only existing columns
